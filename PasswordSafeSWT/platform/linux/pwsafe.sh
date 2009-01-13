@@ -49,7 +49,7 @@ _prefprop=""
 _prg="${0}"
 _vaultdir=""
 _version="V1.04  04.11.2005, shw@schwarzer.d.uunet.de"
-
+_user="${USER}"
 
 # -- functions --
 f_UnlinkMe () {					# -- if we are a link, find our target --
@@ -112,7 +112,7 @@ _prefprop="${_vaultdir}${_pathfilesep}preferences.properties"
 
 
 # -- save stdout and stderr to a file in temp storage --
-exec 1>"${TEMP}${_pathfilesep}pws_start.log" 2>&1
+exec 1>"${TEMP}${_pathfilesep}pws_start_${_user}.log" 2>&1
 
 echo "(I) Environment used: ${_OSString}."
 

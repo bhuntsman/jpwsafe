@@ -10,19 +10,41 @@ import java.io.OutputStream;
 import org.pwsafe.lib.I18nHelper;
 import org.pwsafe.lib.Log;
 
+/**
+ * An implementation of the PwsStorage class that reads and writes to files.
+ * @author mtiller
+ *
+ */
 public class PwsFileStorage implements PwsStorage {
+	/**
+	 * An object for logging activity in this class.
+	 */
 	private static final Log LOG = Log.getInstance(PwsFileStorage.class.getPackage().getName());
-	
+
+	/** The filename used for storage */
 	private String filename;
+
+	/** An InputStream of the file contents */
 	private FileInputStream dbstream;
+	
+	/*
+	 * Build an implementation given the filename for the underlying storage. 
+	 */
 	public PwsFileStorage(String filename) throws IOException {
 		this.filename = filename;
 	}
+	
+	/**
+	 * Closes the stream associated with the file.
+	 */
 	public void close() throws IOException {
 		dbstream.close();
 		dbstream = null;
 	}
 
+	/**
+	 * Returns the input stream associated with the file.
+	 */
 	public InputStream getInputStream() throws IOException {
 		if (dbstream==null) {
 			dbstream = new FileInputStream(filename);
@@ -30,6 +52,13 @@ public class PwsFileStorage implements PwsStorage {
 		return dbstream;
 	}
 
+	/**
+	 * Takes the (encrypted) bytes and writes them out to the file.
+	 * 
+	 * This particular method takes steps to make sure that the
+	 * original file is not overwritten or deleted until the
+	 * new file has been successfully saved.
+	 */
 	public boolean save(byte[] data) throws IOException {
 		System.err.println("Number of bytes to save = "+data.length);
 		
@@ -40,13 +69,10 @@ public class PwsFileStorage implements PwsStorage {
 		File oldFile		= new File( FilePath, FileName );
 		File bakFile		= new File( FilePath, FileName + "~" );
 
-		LOG.info("oldFile = "+oldFile.getAbsolutePath());
-		LOG.info("bakFile = "+bakFile.getAbsolutePath());
 		if ( bakFile.exists() )
 		{	
 			if ( !bakFile.delete() )
 			{
-				LOG.info("Couldn't get rid of bak file");
 				LOG.error( I18nHelper.getInstance().formatMessage("E00012", new Object [] { bakFile.getCanonicalPath() } ) );
 				// TODO Throw an exception here
 				return false;
@@ -54,7 +80,6 @@ public class PwsFileStorage implements PwsStorage {
 		}
 
 		File tempFile	= File.createTempFile( "pwsafe", null, new File(FilePath) );
-		LOG.info("tempFile = "+tempFile.getAbsolutePath());
 		OutputStream OutStream	= new FileOutputStream( tempFile );
 
 		OutStream.write(data);
@@ -66,7 +91,6 @@ public class PwsFileStorage implements PwsStorage {
 		{
 			if ( !oldFile.renameTo( bakFile ) )
 			{
-				LOG.info("Failed to rename old file");
 				LOG.error( I18nHelper.getInstance().formatMessage("E00011", new Object [] { tempFile.getCanonicalPath() } ) );
 				// TODO Throw an exception here?
 				return false;
@@ -78,22 +102,30 @@ public class PwsFileStorage implements PwsStorage {
 		{
 
 			LOG.debug1( "Temp file successfully renamed to " + oldFile.getCanonicalPath() );
-			LOG.info("Successfully saved to "+oldFile.getAbsolutePath());
 			return true;
 		}
 		else
 		{
-			LOG.info("Failed to rename tmp file");
 			LOG.error( I18nHelper.getInstance().formatMessage("E00010", new Object [] { tempFile.getCanonicalPath() } ) );
 			// TODO Throw an exception here?
 			return false;
 		}
 	}
 
+	/**
+	 * FIXME: Currently unimplemented.
+	 */
 	public PwsStorage clone(String prefix) {
 		System.err.println("Unimplemented");
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
+	/**
+	 * This method is *not* part of the storage interface but specific to
+	 * this particular implementation.
+	 * 
+	 * @return Name of the file used for storage.
+	 */
 	public String getFilename() { return filename; }
 }

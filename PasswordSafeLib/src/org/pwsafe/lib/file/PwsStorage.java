@@ -3,10 +3,60 @@ package org.pwsafe.lib.file;
 import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * This interface is an abstraction of the storage mechanism.  The idea is that
+ * each potential medium that the information could be stored (e.g. a file)
+ * will have an associated provider implementation (e.g. PwsFileStorage).
+ * 
+ * In many ways, this interface is a simplified combination of InputStream
+ * and OutputStream.
+ * 
+ * Note that all bytes handled by IO functions in this interface are
+ * <b>already encrypted</b>.  This interface does not handle any unencrypted
+ * data.
+ * 
+ * @author mtiller
+ *
+ */
 public interface PwsStorage {
-	public void close() throws IOException;
+	/**
+	 * This method provides an input stream that can be used 
+	 * @return
+	 * @throws IOException
+	 */
+	
 	public InputStream getInputStream() throws IOException;
-	/** Returns true if the save was successful */
+	/**
+	 * This method takes a series of bytes as input and then attempts
+	 * to save them to the underlying storage provider.  It returns
+	 * true if the save was succesful and false otherwise.
+	 * 
+	 * Note that this interface does not care what version or format the
+	 * file is.  That is handled at the PwSFile layer.
+	 * 
+	 * TODO Should this throw an exception instead?
+	 * 
+	 * @param data The bytes making up the PasswordSafe file
+	 * @return true if save was successful
+	 * @throws IOException
+	 */
 	public boolean save(byte[] data) throws IOException;
+	
+	/**
+	 * This method was introduced to facilitate a test case.
+	 * It should probably be removed or refactored.
+	 * 
+	 * TODO Refactor
+	 * 
+	 * @param prefix Uses the prefix to create an additional storage
+	 * instance of the same type but with a distinct name.
+	 * @return In instance of the same storage class.
+	 */
 	public PwsStorage clone(String prefix);
+	
+	/**
+	 * Used to indicate that all I/O with this storage element is completed.
+	 * @throws IOException
+	 */
+	public void close() throws IOException;
 }

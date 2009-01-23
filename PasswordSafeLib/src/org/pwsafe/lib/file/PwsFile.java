@@ -531,7 +531,7 @@ public abstract class PwsFile
 	}
 
 	/**
-	 * Reads bytes from the file and decryps them.  <code>buff</code> may be any length provided
+	 * Reads bytes from the file and decrypts them.  <code>buff</code> may be any length provided
 	 * that is a multiple of <code>getBlockSize()</code> bytes in length.
 	 * 
 	 * @param buff the buffer to read the bytes into.
@@ -681,53 +681,11 @@ public abstract class PwsFile
 	}
 
 	/**
-	 * Sets the name of the file that this file will be saved to.
-	 * 
-	 * @param newname the new name for the file.
-	 * 
-	 * @throws IOException
-	 */
-//	public void setFilename( String newname )
-//	throws IOException
-//	{
-//		File file;
-//
-//		file = new File( newname );
-//		setFilename( file );
-//		file = null;
-//	}
-	/**
 	 * Sets the file storage
 	 */
 	public void setStorage(PwsStorage storage) {
 		this.storage = storage; 
 	}
-
-	/**
-	 * Sets the name of the file that this file will be saved to.
-	 * 
-	 * @param file the <code>File</code> object representing the new file name.
-	 * 
-	 * @throws IOException
-	 */
-//	protected void setFilename( File file )
-//	throws IOException
-//	{
-//		String	fname;
-//		File	file2;
-//
-//		fname		= file.getCanonicalPath();
-//		file2		= new File( fname );
-//		FilePath	= file2.getParent();
-//		FileName	= file2.getName();
-//
-//		if ( !FilePath.endsWith(File.separator) )
-//		{
-//			FilePath += File.separator;
-//		}
-//
-//		LOG.debug2( "FileName = \"" + FilePath + FileName + "\"" );
-//	}
 
 	/**
 	 * Set the flag to indicate that the file has been modified.  There should not normally

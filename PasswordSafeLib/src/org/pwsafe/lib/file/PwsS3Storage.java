@@ -11,7 +11,22 @@ import com.amazonaws.s3.S3;
 import com.amazonaws.s3.S3Object;
 import com.sun.org.apache.xml.internal.security.utils.Base64;
 
+/**
+ * This is an implementation of the storage interface that uses S3
+ * as the backend.
+ * 
+ * @author mtiller
+ *
+ */
 public class PwsS3Storage implements PwsStorage {
+	/**
+	 * A helper class to hold the Amazon S3 credentials.  This
+	 * will probably be refactored as the handling of this
+	 * information is improved.
+	 * 
+	 * @author mtiller
+	 *
+	 */
 	public static class Credentials {
 		String keyId;
 		String secretKey;
@@ -20,34 +35,63 @@ public class PwsS3Storage implements PwsStorage {
 			secretKey = secret;
 		}
 	}
+	
+	/**
+	 * This object provides the interface to S3.
+	 */
 	private S3 s3;
+	
+	/** The name of the "bucket" where the information will be stored. */
 	private String bucket;
+	
+	/** The name of the filename in the bucket. */
 	private String filename;
+	
+	/** The InputStream providing the bytes */
 	private InputStream dbstream;
+	
+	/**
+	 * Constructs an instance of an Amazon S3 storage provider.
+	 * @param bucket The bucket name
+	 * @param filename The filename to store the information in
+	 * @param credentials The access credentials
+	 */
 	public PwsS3Storage(String bucket, String filename, Credentials credentials) {
-		System.out.println("bucket = "+bucket);
-		System.out.println("filename = "+filename);
-		System.out.println("id = "+credentials.keyId);
-		System.out.println("secret = "+credentials.secretKey);
 		this.bucket = bucket;
 		this.filename = filename;
+		/** Note the use of HTTPS in the connection. */
 		s3 = new S3( S3.HTTPS_URL, credentials.keyId, credentials.secretKey );
 	}
+	
+	/** Method to clone the storage */
 	public PwsStorage clone(String prefix) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
+	/** The close method has nothing to do in this case since all
+	 * data is fetched in a single go.
+	 */
 	public void close() throws IOException {
 		// Nothing to do, not persistent connection
 	}
 
+	/**
+	 * This method grabs the data from S3 (in one shot)
+	 * and then constructs a ByteArrayInputStream for
+	 * use at the PwsFile level.
+	 *
+	 */
 	public InputStream getInputStream() throws IOException {
 		if (dbstream!=null) return dbstream;
 		try {
+			/* Get the S3 object */
 			S3Object obj = s3.getObject(bucket, filename);
+			/* Grab the associated data */
 			String data = obj.getData();
+			/* Decode the string into bytes */
 			byte[] bytes = Base64.decode(data.getBytes());
+			/* Create the input stream */
 			dbstream = new ByteArrayInputStream(bytes); 
 			return dbstream;
 		} catch (Exception e) {
@@ -57,9 +101,15 @@ public class PwsS3Storage implements PwsStorage {
 		// TODO Auto-generated method stub
 	}
 
+	/**
+	 * This method saves all the data back to S3 (in one
+	 * shot).
+	 */
 	public boolean save(byte[] bytes) throws IOException {
+		/* Turn the bytes into a String for S3 */
 		String data = Base64.encode(bytes);
 		try {
+			/* Upload the S3 object */
 			s3.putObjectInline(bucket, filename, data);
 			return true;
 		} catch (Exception e) {
@@ -68,6 +118,19 @@ public class PwsS3Storage implements PwsStorage {
 		}
 	}
 	
+	/**
+	 * This method is not a part of the storage interface.  It opens
+	 * a file that contains information about the S3 account (bucket,
+	 * access credentials) and then creates an instance of the S3 storage
+	 * class.
+	 * 
+	 * The file format is (at the moment) just bucket, access key, secret key
+	 * (each on a different line).
+	 * 
+	 * @param filename The file containing the S3 information. 
+	 * @return An instance of the S3 storage class.
+	 * @throws IOException
+	 */
 	public static PwsS3Storage fromFile(String filename) throws IOException {
 		FileInputStream fin = new FileInputStream(filename);
 		InputStreamReader isr = new InputStreamReader(fin);
@@ -79,95 +142,4 @@ public class PwsS3Storage implements PwsStorage {
 		PwsS3Storage pss = new PwsS3Storage(bucket, "pwsafe_data", credentials);
 		return pss;
 	}
-	
-//	public S3Test( String URL, String AWS_KEY_ID, String SECRET_KEY ) {
-//        try {
-//            System.out.println( "----------------------------------------------------------------------------------" );                        
-//            System.out.println( "Start S3 Tests" );
-//            System.out.println( "----------------------------------------------------------------------------------" );                        
-//
-//
-//            String bucketName = AWS_KEY_ID + "-S3-TestBucket";
-//            String key = AWS_KEY_ID + "-S3-TestKey";
-//            String name = AWS_KEY_ID + " - S3 - Test Data";
-//
-//
-//            S3 s3 = new S3( URL, AWS_KEY_ID, SECRET_KEY );
-//            
-//			
-//            System.out.println( "List All Buckets" );
-//			S3BucketList buckets = s3.listMyBuckets();                       
-//			for ( int i = 0; i < buckets.getBuckets().size(); i++ ) {
-//				System.out.println( "\t" + (String)buckets.getBuckets().elementAt( i ) );
-//			}
-//            
-//			
-//            System.out.println( "Create Bucket" );
-//            s3.createBucket( bucketName );
-//            
-//			
-//            System.out.println( "List All Buckets" );
-//			buckets = s3.listMyBuckets();                       
-//			for ( int i = 0; i < buckets.getBuckets().size(); i++ ) {
-//				System.out.println( "\t" + (String)buckets.getBuckets().elementAt( i ) );
-//			}
-//
-//
-//            System.out.println( "Put Object Inline 1" );
-//            s3.putObjectInline( bucketName, key, name );
-//            
-//			
-//            System.out.println( "Put Object Inline 2" );
-//            s3.putObjectInline( bucketName, key + "2", name + "2" );
-//            
-//			
-//            System.out.println( "List Bucket" );
-//			S3Bucket bucket = s3.listBucket( bucketName );
-//			System.out.println( "\t Bucket Name : " + bucket.getBucketName() );
-//			System.out.println( "\t Keys" + bucket.getBucketName() );
-//			for ( int i = 0; i < bucket.getNames().size(); i++ ) {
-//				System.out.println( "\t\t" + (String)bucket.getNames().elementAt( i ) );
-//			}
-//			     
-//				        
-//            System.out.println( "Get Object" );
-//			S3Object object = s3.getObject( bucketName, key );
-//			System.out.println( "\t Key  : " + object.getKey() );
-//			System.out.println( "\t Data : " + object.getData() ); 
-//            
-//			
-//            System.out.println( "List Bucket" );
-//			bucket = s3.listBucket( bucketName );
-//			System.out.println( "\t Bucket Name : " + bucket.getBucketName() );
-//			System.out.println( "\t Keys" + bucket.getBucketName() );
-//			for ( int i = 0; i < bucket.getNames().size(); i++ ) {
-//				System.out.println( "\t\t" + (String)bucket.getNames().elementAt( i ) );
-//			}
-//            
-//			
-//            System.out.println( "Delete Object 1" );
-//            s3.deleteObject( bucketName, key );
-//            System.out.println( "Delete Object 2" );
-//            s3.deleteObject( bucketName, key + "2" );
-//            
-//			
-//            System.out.println( "Delete Bucket" );
-//            s3.deleteBucket( bucketName );
-//            
-//			
-//            System.out.println( "List All Buckets" );
-//			buckets = s3.listMyBuckets();                       
-//			for ( int i = 0; i < buckets.getBuckets().size(); i++ ) {
-//				System.out.println( "\t" + (String)buckets.getBuckets().elementAt( i ) );
-//			}
-//
-//
-//            System.out.println( "----------------------------------------------------------------------------------" );                        
-//            System.out.println( "End S3 Tests" );
-//            System.out.println( "----------------------------------------------------------------------------------" );                        
-//        }
-//        catch ( Exception exception ) {
-//            exception.printStackTrace();
-//        }
-//	}
 }

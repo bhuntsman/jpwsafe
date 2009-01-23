@@ -43,16 +43,4 @@ public interface PwsStorage {
 	 * @throws IOException
 	 */
 	public boolean save(byte[] data) throws IOException;
-	
-	/**
-	 * This method was introduced to facilitate a test case.
-	 * It should probably be removed or refactored.
-	 * 
-	 * TODO Refactor
-	 * 
-	 * @param prefix Uses the prefix to create an additional storage
-	 * instance of the same type but with a distinct name.
-	 * @return In instance of the same storage class.
-	 */
-	public PwsStorage clone(String prefix);
-}
+	}

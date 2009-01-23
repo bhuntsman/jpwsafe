@@ -62,12 +62,6 @@ public class PwsS3Storage implements PwsStorage {
 		/** Note the use of HTTPS in the connection. */
 		s3 = new S3( S3.HTTPS_URL, credentials.keyId, credentials.secretKey );
 	}
-	
-	/** Method to clone the storage */
-	public PwsStorage clone(String prefix) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 	/**
 	 * This method grabs the data from S3 (in one shot)

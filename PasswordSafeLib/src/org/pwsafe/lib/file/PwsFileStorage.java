@@ -121,15 +121,6 @@ public class PwsFileStorage implements PwsStorage {
 			return false;
 		}
 	}
-
-	/**
-	 * FIXME: Currently unimplemented.
-	 */
-	public PwsStorage clone(String prefix) {
-		System.err.println("Unimplemented");
-		// TODO Auto-generated method stub
-		return null;
-	}
 	
 	/**
 	 * This method is *not* part of the storage interface but specific to

@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.Iterator;
 
 import org.pwsafe.lib.file.PwsFile;
+import org.pwsafe.lib.file.PwsFileStorage;
 import org.pwsafe.lib.file.PwsFileV1;
 import org.pwsafe.lib.file.PwsFileV2;
 import org.pwsafe.lib.file.PwsRecord;
@@ -74,9 +75,14 @@ public class FileConverter
 		PwsRecord	newRec;
 
 		newFile = new PwsFileV2();
+		/* I assume here that the old file was stored as a file (which
+		 * is the case that this test case was written for.
+		 */
+		PwsFileStorage oldStorage = (PwsFileStorage)oldFile.getStorage();
 
 		newFile.setPassphrase( oldFile.getPassphrase() );
-		newFile.setStorage( oldFile.getStorage().clone("v2-") );
+		PwsFileStorage newStorage = new PwsFileStorage("v2-"+oldStorage.getFilename());
+		newFile.setStorage( newStorage );
 
 		for ( Iterator iter = oldFile.getRecords(); iter.hasNext(); )
 		{
@@ -111,9 +117,14 @@ public class FileConverter
 		PwsRecord	newRec;
 
 		newFile = new PwsFileV1();
+		/* I assume here that the old file was stored as a file (which
+		 * is the case that this test case was written for.
+		 */
+		PwsFileStorage oldStorage = (PwsFileStorage)oldFile.getStorage();
 
 		newFile.setPassphrase( oldFile.getPassphrase() );
-		newFile.setStorage( oldFile.getStorage().clone("v1-") );
+		PwsFileStorage newStorage = new PwsFileStorage("v1-"+oldStorage.getFilename());
+		newFile.setStorage( newStorage );
 
 		for ( Iterator iter = oldFile.getRecords(); iter.hasNext(); )
 		{

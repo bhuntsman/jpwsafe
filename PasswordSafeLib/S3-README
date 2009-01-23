@@ -1,0 +1,12 @@
+The S3 support was achieved using the Amazon provided s3.jar file.
+
+Currently (i.e. temporarily) you need to create a file that ends in .ps3 and
+contains three lines to use this.  Those lines are
+
+====
+bucket name
+access key
+secret key
+====
+
+More details to follow...

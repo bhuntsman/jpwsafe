@@ -450,7 +450,7 @@ public abstract class PwsFile
 		Passphrase		= passphrase;
 
 		InputStream is = new ByteArrayInputStream(storage.load());
-		//InputStream is = storage.getInputStream();
+
 		Header			= new PwsFileHeader( is, this );
 		Algorithm		= makeBlowfish( passphrase.getBytes() );
 

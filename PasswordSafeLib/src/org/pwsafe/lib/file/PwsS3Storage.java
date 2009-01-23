@@ -88,7 +88,7 @@ public class PwsS3Storage implements PwsStorage {
 	 * This method saves all the data back to S3 (in one
 	 * shot).
 	 */
-	public boolean save(byte[] bytes) throws IOException {
+	public boolean save(byte[] bytes) {
 		/* Turn the bytes into a String for S3 */
 		String data = Base64.encode(bytes);
 		try {

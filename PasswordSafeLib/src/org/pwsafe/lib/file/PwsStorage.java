@@ -42,5 +42,5 @@ public interface PwsStorage {
 	 * @return true if save was successful
 	 * @throws IOException
 	 */
-	public boolean save(byte[] data) throws IOException;
+	public boolean save(byte[] data);
 	}

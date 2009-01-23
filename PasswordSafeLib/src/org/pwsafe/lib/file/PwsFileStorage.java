@@ -71,53 +71,78 @@ public class PwsFileStorage implements PwsStorage {
 	 * original file is not overwritten or deleted until the
 	 * new file has been successfully saved.
 	 */
-	public boolean save(byte[] data) throws IOException {
-		System.err.println("Number of bytes to save = "+data.length);
-		
-		File file2		= new File( filename );
-		String FilePath	= file2.getParent();
-		String FileName	= file2.getName();
-		
-		File oldFile		= new File( FilePath, FileName );
-		File bakFile		= new File( FilePath, FileName + "~" );
+	public boolean save(byte[] data) {
+		try {
+			System.out.println("Number of bytes to save = "+data.length);
+			System.out.println("Original file: "+filename);
 
-		if ( bakFile.exists() )
-		{	
-			if ( !bakFile.delete() )
-			{
-				LOG.error( I18nHelper.getInstance().formatMessage("E00012", new Object [] { bakFile.getCanonicalPath() } ) );
-				// TODO Throw an exception here
+			File file2		= new File( filename );
+			if (!file2.exists()) {
+				/* Original file doesn't exisit, just go ahead and write it
+				 * (no backup, temp files needed).
+				 */
+				OutputStream OutStream	= new FileOutputStream( filename );
+
+				OutStream.write(data);
+				OutStream.close(); // TODO: needs a finally
+				return true;
+			}
+			System.out.println("Original file path: "+file2.getAbsolutePath());
+			File dir = file2.getCanonicalFile().getParentFile();
+			if (dir==null) {
+				System.err.println("Couldn't find the parent directory for: "+file2.getAbsolutePath());
 				return false;
 			}
-		}
+			String FilePath	= dir.getAbsolutePath();
+			String FileName	= file2.getName();
 
-		File tempFile	= File.createTempFile( "pwsafe", null, new File(FilePath) );
-		OutputStream OutStream	= new FileOutputStream( tempFile );
+			System.out.println("dir path: "+dir.getAbsoluteFile());
+			System.out.println("parent: "+FilePath);
 
-		OutStream.write(data);
-		OutStream.close();
+			File oldFile		= new File( FilePath, FileName );
+			File bakFile		= new File( FilePath, FileName + "~" );
 
-		if ( oldFile.exists() )
-		{
-			if ( !oldFile.renameTo( bakFile ) )
+			if ( bakFile.exists() )
+			{	
+				if ( !bakFile.delete() )
+				{
+					LOG.error( I18nHelper.getInstance().formatMessage("E00012", new Object [] { bakFile.getCanonicalPath() } ) );
+					// TODO Throw an exception here
+					return false;
+				}
+			}
+
+			File tempFile	= File.createTempFile( "pwsafe", null, new File(FilePath) );
+			OutputStream OutStream	= new FileOutputStream( tempFile );
+
+			OutStream.write(data);
+			OutStream.close(); // TODO: needs a finally
+
+			if ( oldFile.exists() )
 			{
-				LOG.error( I18nHelper.getInstance().formatMessage("E00011", new Object [] { tempFile.getCanonicalPath() } ) );
+				if ( !oldFile.renameTo( bakFile ) )
+				{
+					LOG.error( I18nHelper.getInstance().formatMessage("E00011", new Object [] { tempFile.getCanonicalPath() } ) );
+					// TODO Throw an exception here?
+					return false;
+				}
+				LOG.debug1( "Old file successfully renamed to " + bakFile.getCanonicalPath() );
+			}
+
+			if ( tempFile.renameTo( oldFile ) )
+			{
+
+				LOG.debug1( "Temp file successfully renamed to " + oldFile.getCanonicalPath() );
+				return true;
+			}
+			else
+			{
+				LOG.error( I18nHelper.getInstance().formatMessage("E00010", new Object [] { tempFile.getCanonicalPath() } ) );
 				// TODO Throw an exception here?
 				return false;
 			}
-			LOG.debug1( "Old file successfully renamed to " + bakFile.getCanonicalPath() );
-		}
-
-		if ( tempFile.renameTo( oldFile ) )
-		{
-
-			LOG.debug1( "Temp file successfully renamed to " + oldFile.getCanonicalPath() );
-			return true;
-		}
-		else
-		{
-			LOG.error( I18nHelper.getInstance().formatMessage("E00010", new Object [] { tempFile.getCanonicalPath() } ) );
-			// TODO Throw an exception here?
+		} catch(Exception e) {
+			e.printStackTrace(System.err);
 			return false;
 		}
 	}

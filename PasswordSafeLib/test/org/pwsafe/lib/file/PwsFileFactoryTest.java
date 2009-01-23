@@ -191,7 +191,7 @@ public class PwsFileFactoryTest extends TestCase {
 		PwsS3Storage pss = PwsS3Storage.fromFile("pwsafe.ps3");
 		byte[] data = pss.load();
 	}
-	
+
 	public void testLoadFile () throws Exception {
 		PwsFile theFile = PwsFileFactory.loadFile("password_file_2.dat", "THEFISH");
 		
@@ -200,5 +200,4 @@ public class PwsFileFactoryTest extends TestCase {
 		
 		assertEquals (1, theFile.getRecordCount());
 	}
-	
 }

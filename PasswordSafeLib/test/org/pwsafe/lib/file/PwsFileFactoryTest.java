@@ -173,13 +173,10 @@ public class PwsFileFactoryTest extends TestCase {
 		//TODO proper tests here
 	}
 	
+	/* So far, this test just makes sure no exceptions are thrown */
 	public void testFileStorage() throws Exception {
 		PwsFileStorage pfs = new PwsFileStorage("password_file_2.dat");
-		InputStream is = pfs.getInputStream();
-		byte[] id = new byte[4];
-		is.read(id);
-		System.out.println("ID: "+id);
-		pfs.close();
+		byte[] data = pfs.load();
 	}
 
 	public void testS3Writing() throws Exception {
@@ -189,13 +186,10 @@ public class PwsFileFactoryTest extends TestCase {
 		pwsFileV3.save();
 	}
 	
+	/* So far, this test just makes sure no exceptions are thrown */
 	public void testS3Reading() throws Exception {
 		PwsS3Storage pss = PwsS3Storage.fromFile("pwsafe.ps3");
-		InputStream is = pss.getInputStream();
-		byte[] first4 = new byte[4];
-		is.read(first4);
-		System.out.println("ID: "+first4);
-		pss.close();
+		byte[] data = pss.load();
 	}
 	
 	public void testLoadFile () throws Exception {

@@ -9,6 +9,7 @@
  */
 package org.pwsafe.lib.file;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -113,7 +114,7 @@ public class PwsFileV3 extends PwsFile
 
 		Passphrase		= passphrase;
 		
-		InputStream is = storage.getInputStream();
+		InputStream is = new ByteArrayInputStream(storage.load());
 		headerV3		= new PwsFileHeaderV3( is, this );
 		
 		int iter = Util.getIntFromByteArray(headerV3.getIter(), 0);

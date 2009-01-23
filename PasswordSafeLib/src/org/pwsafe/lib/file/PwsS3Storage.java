@@ -69,21 +69,13 @@ public class PwsS3Storage implements PwsStorage {
 		return null;
 	}
 
-	/** The close method has nothing to do in this case since all
-	 * data is fetched in a single go.
-	 */
-	public void close() throws IOException {
-		// Nothing to do, not persistent connection
-	}
-
 	/**
 	 * This method grabs the data from S3 (in one shot)
 	 * and then constructs a ByteArrayInputStream for
 	 * use at the PwsFile level.
 	 *
 	 */
-	public InputStream getInputStream() throws IOException {
-		if (dbstream!=null) return dbstream;
+	public byte[] load() throws IOException {
 		try {
 			/* Get the S3 object */
 			S3Object obj = s3.getObject(bucket, filename);
@@ -91,14 +83,11 @@ public class PwsS3Storage implements PwsStorage {
 			String data = obj.getData();
 			/* Decode the string into bytes */
 			byte[] bytes = Base64.decode(data.getBytes());
-			/* Create the input stream */
-			dbstream = new ByteArrayInputStream(bytes); 
-			return dbstream;
+			return bytes;
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
-			return null;
+			throw new IOException("Unable to load: "+e.getMessage());
 		}
-		// TODO Auto-generated method stub
 	}
 
 	/**

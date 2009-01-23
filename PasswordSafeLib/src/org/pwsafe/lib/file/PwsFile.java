@@ -9,6 +9,7 @@
  */
 package org.pwsafe.lib.file;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -313,8 +314,6 @@ public abstract class PwsFile
 
 		if ( storage != null )
 		{	
-			storage.close();
-	
 			Algorithm	= null;
 		}
 
@@ -450,7 +449,8 @@ public abstract class PwsFile
 
 		Passphrase		= passphrase;
 
-		InputStream is = storage.getInputStream();
+		InputStream is = new ByteArrayInputStream(storage.load());
+		//InputStream is = storage.getInputStream();
 		Header			= new PwsFileHeader( is, this );
 		Algorithm		= makeBlowfish( passphrase.getBytes() );
 
@@ -581,7 +581,8 @@ public abstract class PwsFile
 	{
 		PwsRecord	rec;
 
-		rec = PwsRecord.read( storage.getInputStream(), this );
+		InputStream is = new ByteArrayInputStream(storage.load());
+		rec = PwsRecord.read( is, this );
 
 		if ( rec.isValid() )
 		{	

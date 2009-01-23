@@ -24,8 +24,10 @@ public interface PwsStorage {
 	 * @return
 	 * @throws IOException
 	 */
+	//public InputStream getInputStream() throws IOException;
 	
-	public InputStream getInputStream() throws IOException;
+	public byte[] load() throws IOException;
+	
 	/**
 	 * This method takes a series of bytes as input and then attempts
 	 * to save them to the underlying storage provider.  It returns
@@ -53,10 +55,4 @@ public interface PwsStorage {
 	 * @return In instance of the same storage class.
 	 */
 	public PwsStorage clone(String prefix);
-	
-	/**
-	 * Used to indicate that all I/O with this storage element is completed.
-	 * @throws IOException
-	 */
-	public void close() throws IOException;
 }

@@ -23,9 +23,6 @@ public class PwsFileStorage implements PwsStorage {
 
 	/** The filename used for storage */
 	private String filename;
-
-	/** An InputStream of the file contents */
-	private FileInputStream dbstream;
 	
 	/*
 	 * Build an implementation given the filename for the underlying storage. 
@@ -34,22 +31,37 @@ public class PwsFileStorage implements PwsStorage {
 		this.filename = filename;
 	}
 	
-	/**
-	 * Closes the stream associated with the file.
-	 */
-	public void close() throws IOException {
-		dbstream.close();
-		dbstream = null;
-	}
-
-	/**
-	 * Returns the input stream associated with the file.
-	 */
-	public InputStream getInputStream() throws IOException {
-		if (dbstream==null) {
-			dbstream = new FileInputStream(filename);
-		}
-		return dbstream;
+	/** Grab all the bytes in the file */
+	public byte[] load() throws IOException {
+		File file = new File(filename);
+        InputStream is = new FileInputStream(filename);
+        
+        // Get the size of the file
+        long length = file.length();
+    
+        if (length > Integer.MAX_VALUE) {
+            // File is too large
+        }
+    
+        // Create the byte array to hold the data
+        byte[] bytes = new byte[(int)length];
+    
+        // Read in the bytes
+        int offset = 0;
+        int numRead = 0;
+        while (offset < bytes.length
+               && (numRead=is.read(bytes, offset, bytes.length-offset)) >= 0) {
+            offset += numRead;
+        }
+    
+        // Ensure all the bytes have been read in
+        if (offset < bytes.length) {
+            throw new IOException("Could not completely read file "+file.getName());
+        }
+    
+        // Close the input stream and return bytes
+        is.close();
+        return bytes;
 	}
 
 	/**
@@ -84,9 +96,7 @@ public class PwsFileStorage implements PwsStorage {
 
 		OutStream.write(data);
 		OutStream.close();
-		if (dbstream!=null) {
-			dbstream.close();
-		}
+
 		if ( oldFile.exists() )
 		{
 			if ( !oldFile.renameTo( bakFile ) )

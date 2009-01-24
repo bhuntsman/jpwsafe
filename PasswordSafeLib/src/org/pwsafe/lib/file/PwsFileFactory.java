@@ -142,7 +142,7 @@ public class PwsFileFactory
 	 * 
 	 * @return the generated checksum.
 	 */
-	static final byte [] genRandHash( String passphrase, byte [] stuff ) throws NoSuchAlgorithmException
+	static final byte [] genRandHash( String passphrase, byte [] stuff )
 	{
 		LOG.enterMethod( "PwsFileFactory.genRandHash" );
 

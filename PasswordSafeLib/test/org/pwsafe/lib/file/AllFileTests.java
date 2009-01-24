@@ -11,6 +11,7 @@ public class AllFileTests {
 		suite.addTestSuite(PwsFileV3Test.class);
 		suite.addTestSuite(FileTest.class);
 		suite.addTestSuite(PwsFileFactoryTest.class);
+		suite.addTestSuite(StreamTests.class);
 		//$JUnit-END$
 		return suite;
 	}

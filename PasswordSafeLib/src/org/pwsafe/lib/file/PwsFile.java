@@ -9,15 +9,17 @@
  */
 package org.pwsafe.lib.file;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Iterator;
+
+import net.sourceforge.blowfishj.SHA1;
 
 import org.pwsafe.lib.I18nHelper;
 import org.pwsafe.lib.Log;
@@ -26,8 +28,6 @@ import org.pwsafe.lib.crypto.BlowfishPws;
 import org.pwsafe.lib.exception.EndOfFileException;
 import org.pwsafe.lib.exception.PasswordSafeException;
 import org.pwsafe.lib.exception.UnsupportedFileVersionException;
-
-import net.sourceforge.blowfishj.SHA1;
 
 /**
  * This is the base class for all variations of the PasswordSafe file format.
@@ -149,16 +149,9 @@ public abstract class PwsFile
 		}
 	}
 
-	/** 
-	 * The fully qualified path to the file.
-	 */
-	protected String			FilePath		= null;
-
-	/**
-	 * The file name.
-	 */
-	protected String			FileName		= null;
-
+	/** The storage implementation associated with this file */
+	protected PwsStorage	storage = null;
+	
 	/**
 	 * The passphrase for the file.
 	 */
@@ -205,6 +198,7 @@ public abstract class PwsFile
 	protected PwsFile()
 	{
 		Header	= new PwsFileHeader();
+		storage = null;
 	}
 
 	/**
@@ -218,12 +212,12 @@ public abstract class PwsFile
 	 * @throws UnsupportedFileVersionException
 	 * @throws NoSuchAlgorithmException if no SHA-1 implementation is found.
 	 */
-	protected PwsFile( String filename, String passphrase )
+	protected PwsFile( PwsStorage storage, String passphrase )
 	throws EndOfFileException, IOException, UnsupportedFileVersionException, NoSuchAlgorithmException
 	{
 		LOG.enterMethod( "PwsFile.PwsFile( String )" );
-
-		open( new File(filename), passphrase );
+		this.storage = storage;
+		open( passphrase );
 
 		LOG.leaveMethod( "PwsFile.PwsFile( String )" );
 	}
@@ -323,18 +317,18 @@ public abstract class PwsFile
 	}
 
 	/**
-	 * Returns the fully qualified path and filename.
-	 * 
-	 * @return The fully qualified filename, or null if no filename has been set.
+	 * Returns the storage implementation for this file
 	 */
-	public String getFilename()
-	{
-		if (FilePath != null && FileName != null) {
-			return FilePath + FileName;
-		} else {
-			return null;
-		}
-		
+	public PwsStorage getStorage() {
+		return storage;
+	}
+	
+	/**
+	 * Allow the storage implementation associated with this file to be set.
+	 * @param storage An implementation of the PwsStorage interface.
+	 */
+	public void setStorage(PwsStorage storage) {
+		this.storage = storage;
 	}
 
 	/**
@@ -442,16 +436,16 @@ public abstract class PwsFile
 	 * @throws UnsupportedFileVersionException
 	 * @throws NoSuchAlgorithmException if no SHA-1 implementation is found.
 	 */
-	protected void open( File file, String passphrase )
+	protected void open( String passphrase )
 	throws EndOfFileException, IOException, UnsupportedFileVersionException, NoSuchAlgorithmException
 	{
 		LOG.enterMethod( "PwsFile.init" );
 
-		setFilename( file );
-
 		Passphrase		= passphrase;
-
-		InStream		= new FileInputStream( file );
+		
+		if (storage!=null) {
+			InStream		= new ByteArrayInputStream(storage.load());
+		}
 		Header			= new PwsFileHeader( this );
 		Algorithm		= makeBlowfish( passphrase.getBytes() );
 
@@ -626,15 +620,12 @@ public abstract class PwsFile
 	throws IOException, NoSuchAlgorithmException
 	{
 		PwsRecord	rec;
-		File		tempFile;
-		File		oldFile;
-		File		bakFile;
 
 		// For safety we'll write to a temporary file which will be renamed to the
 		// real name if we manage to write it successfully.
 
-		tempFile	= File.createTempFile( "pwsafe", null, new File(FilePath) );
-		OutStream	= new FileOutputStream( tempFile );
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		OutStream	= baos;
 
 		try
 		{
@@ -655,45 +646,14 @@ public abstract class PwsFile
 	
 			OutStream.close();
 	
-			oldFile		= new File( FilePath, FileName );
-			bakFile		= new File( FilePath, FileName + "~" );
-
-			if ( bakFile.exists() )
-			{	
-				if ( !bakFile.delete() )
-				{
-					LOG.error( I18nHelper.getInstance().formatMessage("E00012", new Object [] { bakFile.getCanonicalPath() } ) );
-					// TODO Throw an exception here
-					return;
-				}
-			}
-
-			if ( oldFile.exists() )
-			{
-				if ( !oldFile.renameTo( bakFile ) )
-				{
-					LOG.error( I18nHelper.getInstance().formatMessage("E00011", new Object [] { tempFile.getCanonicalPath() } ) );
-					// TODO Throw an exception here?
-					return;
-				}
-				LOG.debug1( "Old file successfully renamed to " + bakFile.getCanonicalPath() );
-			}
-
-			if ( tempFile.renameTo( oldFile ) )
-			{
-				LOG.debug1( "Temp file successfully renamed to " + oldFile.getCanonicalPath() );
-
-				for ( Iterator iter = getRecords(); iter.hasNext(); )
-				{
-					rec = (PwsRecord) iter.next();
-
-					rec.resetModified();
-				}
+			if (storage.save(baos.toByteArray())) {
 				Modified = false;
 			}
 			else
 			{
-				LOG.error( I18nHelper.getInstance().formatMessage("E00010", new Object [] { tempFile.getCanonicalPath() } ) );
+				// FIXME: I'm not sure what this message should be, but it should
+				// reflect the fact that storage failed, not anything about a temp file.
+				LOG.error( I18nHelper.getInstance().formatMessage("E00010", new Object [] { "Storage file" } ) );
 				// TODO Throw an exception here?
 				return;
 			}
@@ -715,49 +675,6 @@ public abstract class PwsFile
 			OutStream	= null;
 			Algorithm	= null;
 		}
-	}
-
-	/**
-	 * Sets the name of the file that this file will be saved to.
-	 * 
-	 * @param newname the new name for the file.
-	 * 
-	 * @throws IOException
-	 */
-	public void setFilename( String newname )
-	throws IOException
-	{
-		File file;
-
-		file = new File( newname );
-		setFilename( file );
-		file = null;
-	}
-
-	/**
-	 * Sets the name of the file that this file will be saved to.
-	 * 
-	 * @param file the <code>File</code> object representing the new file name.
-	 * 
-	 * @throws IOException
-	 */
-	protected void setFilename( File file )
-	throws IOException
-	{
-		String	fname;
-		File	file2;
-
-		fname		= file.getCanonicalPath();
-		file2		= new File( fname );
-		FilePath	= file2.getParent();
-		FileName	= file2.getName();
-
-		if ( !FilePath.endsWith(File.separator) )
-		{
-			FilePath += File.separator;
-		}
-
-		LOG.debug2( "FileName = \"" + FilePath + FileName + "\"" );
 	}
 
 	/**

@@ -50,13 +50,16 @@ public class PwsS3Storage implements PwsStorage {
 	/** The InputStream providing the bytes */
 	private InputStream dbstream;
 	
+	private PwsCryptoProvider crypto;
+	
 	/**
 	 * Constructs an instance of an Amazon S3 storage provider.
 	 * @param bucket The bucket name
 	 * @param filename The filename to store the information in
 	 * @param credentials The access credentials
 	 */
-	public PwsS3Storage(String bucket, String filename, Credentials credentials) {
+	public PwsS3Storage(PwsCryptoProvider crypto, String bucket, String filename, Credentials credentials) {
+		this.crypto = crypto;
 		this.bucket = bucket;
 		this.filename = filename;
 		/** Note the use of HTTPS in the connection. */
@@ -114,7 +117,7 @@ public class PwsS3Storage implements PwsStorage {
 	 * @return An instance of the S3 storage class.
 	 * @throws IOException
 	 */
-	public static PwsS3Storage fromFile(String filename) throws IOException {
+	public static PwsS3Storage fromFile(PwsCryptoProvider crypto, String filename) throws IOException {
 		FileInputStream fin = new FileInputStream(filename);
 		InputStreamReader isr = new InputStreamReader(fin);
 		BufferedReader br = new BufferedReader(isr);
@@ -122,7 +125,7 @@ public class PwsS3Storage implements PwsStorage {
 		String id = br.readLine();
 		String secret = br.readLine();
 		Credentials credentials = new Credentials(id, secret);
-		PwsS3Storage pss = new PwsS3Storage(bucket, "pwsafe_data", credentials);
+		PwsS3Storage pss = new PwsS3Storage(crypto, bucket, "pwsafe_data", credentials);
 		return pss;
 	}
 }

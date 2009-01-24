@@ -55,7 +55,7 @@ import org.pwsafe.lib.exception.UnsupportedFileVersionException;
  * </tt>
  * </p>
  */
-public abstract class PwsFile
+public abstract class PwsFile implements PwsCryptoProvider 
 {
 	private static final Log LOG = Log.getInstance(PwsFile.class.getPackage().getName());
 
@@ -505,7 +505,7 @@ public abstract class PwsFile
 	 * @throws EndOfFileException If end of file occurs whilst reading the data.
 	 * @throws IOException        If an error occurs whilst reading the file.
 	 */
-	protected void readBytes( byte [] bytes )
+	public void readBytes( byte [] bytes )
 	throws IOException, EndOfFileException
 	{
 		int count;
@@ -535,7 +535,7 @@ public abstract class PwsFile
 	 * @throws IOException If a read error occurs.
 	 * @throws IllegalArgumentException If <code>buff.length</code> is not an integral multiple of <code>BLOCK_LENGTH</code>.
 	 */
-	protected void readDecryptedBytes( byte [] buff )
+	public void readDecryptedBytes( byte [] buff )
 	throws EndOfFileException, IOException
 	{
 		if ( (buff.length == 0) || ((buff.length % getBlockSize()) != 0) )
@@ -704,7 +704,7 @@ public abstract class PwsFile
 	 * 
 	 * @throws IOException
 	 */
-	void writeBytes( byte [] buffer )
+	public void writeBytes( byte [] buffer )
 	throws IOException
 	{
 		OutStream.write( buffer );
@@ -718,7 +718,7 @@ public abstract class PwsFile
 	 * 
 	 * @throws IOException
 	 */
-	protected void writeEncryptedBytes( byte [] buff )
+	public void writeEncryptedBytes( byte [] buff )
 	throws IOException
 	{
 		if ( (buff.length == 0) || ((buff.length % getBlockSize()) != 0) )

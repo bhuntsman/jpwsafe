@@ -7,7 +7,7 @@
  * distributed with this code, or available from
  * http://www.opensource.org/licenses/artistic-license-2.0.php
  */
-package org.pwsafe.test;
+package org.pwsafe.lib.file;
 
 import junit.framework.TestCase;
 

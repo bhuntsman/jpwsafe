@@ -284,7 +284,7 @@ public class PwsFileV3 extends PwsFile
 	}
 	
 	/**
-	 * Reads bytes from the file and decryps them.  <code>buff</code> may be any length provided
+	 * Reads bytes from the file and decrypts them.  <code>buff</code> may be any length provided
 	 * that is a multiple of <code>BLOCK_LENGTH</code> bytes in length.
 	 * 
 	 * @param buff the buffer to read the bytes into.
@@ -293,7 +293,7 @@ public class PwsFileV3 extends PwsFile
 	 * @throws IOException If a read error occurs.
 	 * @throws IllegalArgumentException If <code>buff.length</code> is not an integral multiple of <code>BLOCK_LENGTH</code>.
 	 */
-	protected void readDecryptedBytes( byte [] buff )
+	public void readDecryptedBytes( byte [] buff )
 	throws EndOfFileException, IOException
 	{
 		if ( (buff.length == 0) || ((buff.length % getBlockSize()) != 0) )
@@ -323,7 +323,7 @@ public class PwsFileV3 extends PwsFile
 	 * 
 	 * @throws IOException
 	 */
-	protected void writeEncryptedBytes( byte [] buff )
+	public void writeEncryptedBytes( byte [] buff )
 	throws IOException
 	{
 		if ( (buff.length == 0) || ((buff.length % getBlockSize()) != 0) )

@@ -1,11 +1,13 @@
 package org.pwsafe.lib.file;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 
 import com.amazonaws.s3.S3;
 import com.amazonaws.s3.S3Object;
@@ -27,10 +29,12 @@ public class PwsS3Storage implements PwsStorage {
 	 * @author mtiller
 	 *
 	 */
-	public static class Credentials {
+	public static class AccountDetails {
+		String bucket;
 		String keyId;
 		String secretKey;
-		public Credentials(String id, String secret) {
+		public AccountDetails(String bucket, String id, String secret) {
+			this.bucket = bucket;
 			keyId = id;
 			secretKey = secret;
 		}
@@ -40,9 +44,12 @@ public class PwsS3Storage implements PwsStorage {
 	 * This object provides the interface to S3.
 	 */
 	private S3 s3;
-	
-	/** The name of the "bucket" where the information will be stored. */
-	private String bucket;
+
+	/** These are the details about the amazon account required to access the
+	 * S3 storage.  These can either be read from a local file or entered by
+	 * the user in the case where the password safe is being initialized.
+	 */
+	private AccountDetails account;
 	
 	/** The name of the filename in the bucket. */
 	private String filename;
@@ -55,15 +62,46 @@ public class PwsS3Storage implements PwsStorage {
 	/**
 	 * Constructs an instance of an Amazon S3 storage provider.
 	 * @param bucket The bucket name
-	 * @param filename The filename to store the information in
-	 * @param credentials The access credentials
+	 * @param filename The filename the account information is stored in (if it exists) or
+	 * the file to write it to if the storage is initialized.
+	 * @param account The bucket name and access credentials for the S3 account.  These are
+	 * only required if a new storage area is being initialized.  Otherwise, they are
+	 * read from the specified file.
 	 */
-	public PwsS3Storage(PwsCryptoProvider crypto, String bucket, String filename, Credentials credentials) {
+	public PwsS3Storage(PwsCryptoProvider crypto, String filename, AccountDetails acc) throws IOException {
 		this.crypto = crypto;
-		this.bucket = bucket;
 		this.filename = filename;
-		/** Note the use of HTTPS in the connection. */
-		s3 = new S3( S3.HTTPS_URL, credentials.keyId, credentials.secretKey );
+		File f = new File(filename);
+		if (f.exists()) {
+			this.account = new AccountDetails(null, null, null);
+			FileInputStream fin = new FileInputStream(filename);
+			InputStreamReader isr = new InputStreamReader(fin);
+			BufferedReader br = new BufferedReader(isr);
+			account.bucket = br.readLine();
+			account.keyId = br.readLine();
+			account.secretKey = br.readLine();
+			/** Note the use of HTTPS in the connection. */
+			s3 = new S3( S3.HTTPS_URL, account.keyId, account.secretKey );
+		} else {
+			this.account = acc;
+			if (acc!=null && acc.bucket!=null && acc.keyId!=null && acc.secretKey!=null) {
+				/** Note the use of HTTPS in the connection. */
+				s3 = new S3( S3.HTTPS_URL, account.keyId, account.secretKey );
+				/** TODO: Check that the S3 credentials are valid somehow before
+				 * writing the file.
+				 */
+				/** FIXME: need to create the bucket */
+				FileOutputStream fin = new FileOutputStream(filename);
+				OutputStreamWriter osw = new OutputStreamWriter(fin);
+				osw.write(account.bucket+"\n");
+				osw.write(account.keyId+"\n");
+				osw.write(account.secretKey+"\n");
+			} else {
+				// FIXME: What to do?
+				/* Nothing can be done...throw exception? */
+				s3 = null;
+			}
+		}
 	}
 
 	/**
@@ -75,7 +113,7 @@ public class PwsS3Storage implements PwsStorage {
 	public byte[] load() throws IOException {
 		try {
 			/* Get the S3 object */
-			S3Object obj = s3.getObject(bucket, filename);
+			S3Object obj = s3.getObject(account.bucket, filename);
 			/* Grab the associated data */
 			String data = obj.getData();
 			/* Decode the string into bytes */
@@ -96,36 +134,11 @@ public class PwsS3Storage implements PwsStorage {
 		String data = Base64.encode(bytes);
 		try {
 			/* Upload the S3 object */
-			s3.putObjectInline(bucket, filename, data);
+			s3.putObjectInline(account.bucket, filename, data);
 			return true;
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			return false;			
 		}
-	}
-	
-	/**
-	 * This method is not a part of the storage interface.  It opens
-	 * a file that contains information about the S3 account (bucket,
-	 * access credentials) and then creates an instance of the S3 storage
-	 * class.
-	 * 
-	 * The file format is (at the moment) just bucket, access key, secret key
-	 * (each on a different line).
-	 * 
-	 * @param filename The file containing the S3 information. 
-	 * @return An instance of the S3 storage class.
-	 * @throws IOException
-	 */
-	public static PwsS3Storage fromFile(PwsCryptoProvider crypto, String filename) throws IOException {
-		FileInputStream fin = new FileInputStream(filename);
-		InputStreamReader isr = new InputStreamReader(fin);
-		BufferedReader br = new BufferedReader(isr);
-		String bucket = br.readLine();
-		String id = br.readLine();
-		String secret = br.readLine();
-		Credentials credentials = new Credentials(id, secret);
-		PwsS3Storage pss = new PwsS3Storage(crypto, bucket, "pwsafe_data", credentials);
-		return pss;
 	}
 }

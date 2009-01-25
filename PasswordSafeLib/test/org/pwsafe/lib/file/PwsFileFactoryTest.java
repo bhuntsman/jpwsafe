@@ -173,20 +173,6 @@ public class PwsFileFactoryTest extends TestCase {
 		byte[] data = pfs.load();
 	}
 
-	public void testS3Writing() throws Exception {
-		PwsFileV3 pwsFileV3 = new PwsFileV3();
-		pwsFileV3.setPassphrase("Amazon");
-		PwsS3Storage pss = new PwsS3Storage(null, "pwsafe.ps3", null);
-		pwsFileV3.setStorage(pss);
-		pwsFileV3.save();
-	}
-	
-	/* So far, this test just makes sure no exceptions are thrown */
-	public void testS3Reading() throws Exception {
-		PwsS3Storage pss = new PwsS3Storage(null, "pwsafe.ps3", null);
-		byte[] data = pss.load();
-	}
-
 	public void testLoadFile () throws Exception {
 		PwsFile theFile = PwsFileFactory.loadFile("password_file_2.dat", "THEFISH");
 		

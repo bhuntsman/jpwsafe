@@ -203,6 +203,13 @@ public class PwsFileFactory
 		
 		PwsFile		file;
 		
+		if (filename.endsWith(".ps3")) {
+			file = new PwsFileV3(new PwsS3Storage(filename, null, passphrase), passphrase);
+			file.readAll();
+			file.close();
+			return file;			
+		}
+		
 		// First check for a v3 file...
 		FileInputStream fis = new FileInputStream(filename);
 		byte[] first4Bytes = new byte[4];

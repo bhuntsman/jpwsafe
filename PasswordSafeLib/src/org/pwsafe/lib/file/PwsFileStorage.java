@@ -154,4 +154,10 @@ public class PwsFileStorage implements PwsStorage {
 	 * @return Name of the file used for storage.
 	 */
 	public String getFilename() { return filename; }
+	
+	public void setPassphrase(String passphrase) {
+		/* Do nothing since there is no additional enrypted information associated
+		 * with this storage mechanism
+		 */
+	}
 }

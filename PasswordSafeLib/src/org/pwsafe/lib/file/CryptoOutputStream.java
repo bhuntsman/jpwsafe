@@ -47,7 +47,24 @@ public class CryptoOutputStream extends OutputStream {
 
 		return new BlowfishPws( sha1.getDigest(), ipThing );
 	}
+	private void initialize() throws IOException {
+		randStuff = new byte[8];
+		randHash = new byte[20];
+		salt = new byte[20];
+		ipThing = new byte[8];
+		Util.newRandBytes(randStuff);
+		byte [] temp = Util.cloneByteArray( randStuff, 10 );
+		randHash = PwsFileFactory.genRandHash( passphrase, temp );
+		Util.newRandBytes(salt);
+		Util.newRandBytes(ipThing);
+		engine = makeBlowfish(passphrase.getBytes());
+		rawStream.write(randStuff);
+		rawStream.write(randHash);
+		rawStream.write(salt);
+		rawStream.write(ipThing);
+	}
 	public void close() throws IOException {
+		if (salt==null) initialize();
 		for(;index<16;index++) { block[index] = 0; }
 		index = 0;
 		engine.encrypt(block);
@@ -57,24 +74,9 @@ public class CryptoOutputStream extends OutputStream {
 		super.close();
 	}
 	public void write(int b) throws IOException {
-		//System.out.println("Writing out "+b);
+		System.out.println("Writing out "+b);
 		/** first time through, parse header and set up engine */
-		if (salt==null) {
-			randStuff = new byte[8];
-			randHash = new byte[20];
-			salt = new byte[20];
-			ipThing = new byte[8];
-			Util.newRandBytes(randStuff);
-			byte [] temp = Util.cloneByteArray( randStuff, 10 );
-			randHash = PwsFileFactory.genRandHash( passphrase, temp );
-			Util.newRandBytes(salt);
-			Util.newRandBytes(ipThing);
-			engine = makeBlowfish(passphrase.getBytes());
-			rawStream.write(randStuff);
-			rawStream.write(randHash);
-			rawStream.write(salt);
-			rawStream.write(ipThing);
-		}
+		if (salt==null) initialize();
 		if (index==16) {
 			engine.encrypt(block);
 			//System.out.println("Wrote block");

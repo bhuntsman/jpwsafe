@@ -74,7 +74,7 @@ public class CryptoOutputStream extends OutputStream {
 		super.close();
 	}
 	public void write(int b) throws IOException {
-		System.out.println("Writing out "+b);
+		//System.out.println("Writing out "+b);
 		/** first time through, parse header and set up engine */
 		if (salt==null) initialize();
 		if (index==16) {

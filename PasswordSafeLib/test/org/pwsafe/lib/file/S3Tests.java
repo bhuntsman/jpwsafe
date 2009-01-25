@@ -29,7 +29,9 @@ public class S3Tests extends TestCase {
 			file.add(v3);
 		}
 		System.out.println();
+		
 		File f = new File("news3.ps");
+		System.out.println("Check to see if "+f.getAbsolutePath()+" exists");
 		if (f.exists()) {
 			assertTrue(f.delete());
 			assertFalse(f.exists());
@@ -38,29 +40,47 @@ public class S3Tests extends TestCase {
 		
 		/* First try to create the storage without S3 details.  This should throw an exception  */
 		try {
-			file.setStorage(new PwsS3Storage("news3.ps3", null, "Amazon"));
+			file.setStorage(new PwsS3Storage("news3.ps3", null, password));
+			/* If you get a failure here, make sure to delete news3.ps3 in the project
+			 * dir and re-run the test.  I've tried everything I can think of here to
+			 * do that automatically, but it doesn't seem to work?!?
+			 */
 			fail("Failed to throw exception");
 		} catch (IOException e) {
 			/* Good */
 		}
 		
 		/* Try again... */
-		file.setStorage(new PwsS3Storage("news3.ps3", details, "Amazon"));
+		file.setStorage(new PwsS3Storage("news3.ps3", details, password));
 		file.save();
 		System.out.println("Wrote records: " + file.getRecordCount());
 		file.close();
 
 		/** Should be able to open it without providing details */
-		PwsFileV3 file2 = new PwsFileV3(new PwsS3Storage("news3.ps3", null, "Amazon"), password);
+		PwsFileV3 file2 = new PwsFileV3(new PwsS3Storage("news3.ps3", null, password), password);
 		file2.readAll();
 		System.out.println("Read records: " + file2.getRecordCount());
+		
+		PwsFile file3 = PwsFileFactory.loadFile("news3.ps3", password);
+		//file3.readAll();
+		System.out.println("Read records (again): " + file3.getRecordCount());
+		
+		file.close();
+		file2.close();
+		file3.close();
+		
+		f = new File("news3.ps");
+		if (f.exists()) {
+//			assertTrue(f.delete());
+//			assertFalse(f.exists());
+		}
 	}
 	public void testReadExisiting() {
 		System.out.println("read existing");
 	}
 	public void testCryptoS3() throws Exception {
 		String filename = "testReadWrite.ps3";
-		String passphrase = "testCryptS3";
+		String passphrase = "Amazon";
 		File f = new File(filename);
 		if (f.exists()) {
 			assertTrue(f.delete());

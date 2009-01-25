@@ -15,7 +15,7 @@ import net.sourceforge.blowfishj.SHA1;
 import com.amazonaws.s3.S3;
 import com.amazonaws.s3.S3BucketList;
 import com.amazonaws.s3.S3Object;
-import com.sun.org.apache.xml.internal.security.utils.Base64;
+import com.amazonaws.crypto.Base64;
 
 /**
  * This is an implementation of the storage interface that uses S3
@@ -56,7 +56,7 @@ public class PwsS3Storage implements PwsStorage {
 			sha1.update( kb, 0, kb.length );
 			sha1.update( sb, 0, sb.length );
 			sha1.finalize();
-			String hash = Base64.encode(sha1.getDigest());
+			String hash = Base64.encodeBytes(sha1.getDigest());
 			/* trim the last char of the hash */
 			hash = hash.substring(0, hash.length()-2);
 			this.hashedBucket = "jps3-"+hash+"-"+bucket;
@@ -186,7 +186,7 @@ public class PwsS3Storage implements PwsStorage {
 	 */
 	public boolean save(byte[] bytes) {
 		/* Turn the bytes into a String for S3 */
-		String data = Base64.encode(bytes);
+		String data = Base64.encodeBytes(bytes);
 		try {
 			/* Upload the S3 object */
 			s3.putObjectInline(account.getHashedName(), DEFAULT_KEY, data);

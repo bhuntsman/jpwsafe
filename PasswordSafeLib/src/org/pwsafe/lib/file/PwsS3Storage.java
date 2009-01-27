@@ -61,6 +61,11 @@ public class PwsS3Storage implements PwsStorage {
 			String hash = Base64.encodeBytes(sha1.getDigest());
 			/* trim the last char of the hash */
 			hash = hash.substring(0, hash.length()-2);
+			/* We don't want any slashes in the name because that
+			 * confuses things.  Same with plus signs.
+			 */
+			hash = hash.replace('/', '_');
+			hash = hash.replace('+', '-');
 			this.hashedBucket = "jps3-"+hash+"-"+bucket;
 			keyId = id;
 			secretKey = secret;

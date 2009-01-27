@@ -1,8 +1,6 @@
 package org.pwsafe.lib.file;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 
 import net.sourceforge.blowfishj.SHA1;
@@ -10,10 +8,25 @@ import net.sourceforge.blowfishj.SHA1;
 import org.pwsafe.lib.Util;
 import org.pwsafe.lib.crypto.BlowfishPws;
 
+/**
+ * This class is used to encrypt an existing OutputStream
+ * while providing an OutputStream interface itself.
+ * 
+ * Note that because of the block nature of encryption there
+ * will normally be extra bytes at the end of such a stream to
+ * represented the encrypted "zero padding" added at the end of
+ * the original stream.
+ * 
+ * Also because of the block nature of this stream, there is
+ * implicit (and unflushable) buffering involved so closing
+ * the stream is extremely important.
+ * 
+ * @author mtiller
+ *
+ */
 public class CryptoOutputStream extends OutputStream {
 	private byte [] block = new byte[16];
 	private int index = 0;
-	private int curBlockSize = 0;
 	/* Header info */
 	private byte []	randStuff = null;
 	private byte []	randHash = null;
@@ -23,6 +36,11 @@ public class CryptoOutputStream extends OutputStream {
 	private String passphrase;
 	private OutputStream rawStream;
 	private BlowfishPws engine;
+	/**
+	 * The constructor for the encrytped output stream class.
+	 * @param passphrase A passphrase used for encryption
+	 * @param stream The stream to be encrypted.
+	 */
 	public CryptoOutputStream(String passphrase, OutputStream stream) {
 		rawStream = stream;
 		this.passphrase = passphrase;
@@ -47,6 +65,11 @@ public class CryptoOutputStream extends OutputStream {
 
 		return new BlowfishPws( sha1.getDigest(), ipThing );
 	}
+	/**
+	 * a routine to initialize the encryption data structures
+	 * and generate some random header data.
+	 * @throws IOException
+	 */
 	private void initialize() throws IOException {
 		randStuff = new byte[8];
 		randHash = new byte[20];
@@ -63,23 +86,27 @@ public class CryptoOutputStream extends OutputStream {
 		rawStream.write(salt);
 		rawStream.write(ipThing);
 	}
+	/**
+	 * Closes the stream and writes out the final block (zero padded if
+	 * necessary.
+	 */
 	public void close() throws IOException {
 		if (salt==null) initialize();
 		for(;index<16;index++) { block[index] = 0; }
 		index = 0;
 		engine.encrypt(block);
 		rawStream.write(block);
-		//System.out.println("Wrote block");
 		rawStream.close();
 		super.close();
 	}
+	/**
+	 * Writes an individual byte.
+	 */
 	public void write(int b) throws IOException {
-		//System.out.println("Writing out "+b);
 		/** first time through, parse header and set up engine */
 		if (salt==null) initialize();
 		if (index==16) {
 			engine.encrypt(block);
-			//System.out.println("Wrote block");
 			rawStream.write(block);
 			index = 0;
 		}

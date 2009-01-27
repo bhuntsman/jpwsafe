@@ -1,7 +1,6 @@
 package org.pwsafe.lib.file;
 
 import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * This interface is an abstraction of the storage mechanism.  The idea is that

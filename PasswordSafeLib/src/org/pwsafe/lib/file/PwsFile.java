@@ -54,7 +54,7 @@ import org.pwsafe.lib.exception.UnsupportedFileVersionException;
  * </tt>
  * </p>
  */
-public abstract class PwsFile implements PwsCryptoProvider 
+public abstract class PwsFile  
 {
 	private static final Log LOG = Log.getInstance(PwsFile.class.getPackage().getName());
 

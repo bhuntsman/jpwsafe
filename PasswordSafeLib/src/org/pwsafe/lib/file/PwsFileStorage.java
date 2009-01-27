@@ -73,8 +73,8 @@ public class PwsFileStorage implements PwsStorage {
 	 */
 	public boolean save(byte[] data) {
 		try {
-			System.out.println("Number of bytes to save = "+data.length);
-			System.out.println("Original file: "+filename);
+			LOG.debug1("Number of bytes to save = "+data.length);
+			LOG.debug1("Original file: "+filename);
 
 			File file2		= new File( filename );
 			if (!file2.exists()) {
@@ -87,17 +87,14 @@ public class PwsFileStorage implements PwsStorage {
 				OutStream.close(); // TODO: needs a finally
 				return true;
 			}
-			System.out.println("Original file path: "+file2.getAbsolutePath());
+			LOG.debug1("Original file path: "+file2.getAbsolutePath());
 			File dir = file2.getCanonicalFile().getParentFile();
 			if (dir==null) {
-				System.err.println("Couldn't find the parent directory for: "+file2.getAbsolutePath());
+				LOG.error("Couldn't find the parent directory for: "+file2.getAbsolutePath());
 				return false;
 			}
 			String FilePath	= dir.getAbsolutePath();
 			String FileName	= file2.getName();
-
-			System.out.println("dir path: "+dir.getAbsoluteFile());
-			System.out.println("parent: "+FilePath);
 
 			File oldFile		= new File( FilePath, FileName );
 			File bakFile		= new File( FilePath, FileName + "~" );
@@ -142,7 +139,7 @@ public class PwsFileStorage implements PwsStorage {
 				return false;
 			}
 		} catch(Exception e) {
-			e.printStackTrace(System.err);
+			LOG.error(e.getMessage());
 			return false;
 		}
 	}

@@ -11,8 +11,6 @@ package org.pwsafe.lib.file;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
@@ -93,14 +91,6 @@ public class PwsFileV3 extends PwsFile
 	throws EndOfFileException, IOException, UnsupportedFileVersionException, NoSuchAlgorithmException
 	{
 		super( storage, passphrase );
-	}
-	
-	public void dumpBytes(String title, byte[] bytes) {
-		System.out.print(title + " [");
-		for (int i = 0; i < bytes.length; i++) {
-			System.out.print(bytes[i] + " ");
-		}
-		System.out.println("]");
 	}
 
 	protected void open( String passphrase )

@@ -5,17 +5,17 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.util.Vector;
+
+import org.pwsafe.lib.Log;
 
 import net.sourceforge.blowfishj.SHA1;
 
+import com.amazonaws.crypto.Base64;
 import com.amazonaws.s3.S3;
 import com.amazonaws.s3.S3BucketList;
 import com.amazonaws.s3.S3Object;
-import com.amazonaws.crypto.Base64;
 
 /**
  * This is an implementation of the storage interface that uses S3
@@ -25,6 +25,8 @@ import com.amazonaws.crypto.Base64;
  *
  */
 public class PwsS3Storage implements PwsStorage {
+	private static final Log LOG = Log.getInstance(PwsS3Storage.class.getPackage().getName());
+	
 	/**
 	 * A helper class to hold the Amazon S3 credentials.  This
 	 * will probably be refactored as the handling of this
@@ -39,7 +41,7 @@ public class PwsS3Storage implements PwsStorage {
 	 *
 	 */
 	public static class AccountDetails {
-		/* The plain unhashed bucket name */
+		/** The plain unhashed bucket name */
 		String bucketTitle;
 		String keyId;
 		String secretKey;
@@ -63,6 +65,10 @@ public class PwsS3Storage implements PwsStorage {
 			keyId = id;
 			secretKey = secret;
 		}
+		/**
+		 * Get a hashed form of the bucket name.
+		 * @return The hashed form.
+		 */
 		public String getHashedName() {
 			return hashedBucket;
 		}
@@ -81,12 +87,6 @@ public class PwsS3Storage implements PwsStorage {
 	 */
 	private AccountDetails account;
 	
-	/** The name of the filename in the bucket. */
-	private String filename;
-	
-	/** The InputStream providing the bytes */
-	private InputStream dbstream;
-	
 	/** Keep a copy of the passphrase */
 	private String passphrase;
 	
@@ -100,21 +100,17 @@ public class PwsS3Storage implements PwsStorage {
 	 * read from the specified file.
 	 */
 	public PwsS3Storage(String filename, AccountDetails acc, String passphrase) throws IOException {
-		this.filename = filename;
 		this.passphrase = passphrase;
 		File f = new File(filename);
 		if (f.exists()) {
 			FileInputStream fin = new FileInputStream(filename);
-			CryptoInputStream cis = new CryptoInputStream(passphrase, fin);
+			CryptoInputStream cis = new CryptoInputStream(this.passphrase, fin);
 			InputStreamReader isr = new InputStreamReader(cis);
 			BufferedReader br = new BufferedReader(isr);
 			String bucket = br.readLine();
-			System.out.println("Bucket = '"+bucket+"'");
 		    String keyId = br.readLine();
-		    System.out.println("keyId = '"+keyId+"'");
 		    String secretKey = br.readLine();
 		    cis.close();
-		    System.out.println("secretKey = '"+secretKey+"'");
 		    this.account = new AccountDetails(bucket, keyId, secretKey);
 			/** Note the use of HTTPS in the connection. */
 			s3 = new S3( S3.HTTPS_URL, account.keyId, account.secretKey );
@@ -133,14 +129,14 @@ public class PwsS3Storage implements PwsStorage {
 				try {
 					Vector v = bl.getBuckets();
 					if (v.contains(hash)) {
-						System.out.println("Bucket "+hash+" found.");
+						LOG.debug1("Bucket "+hash+" found.");
 					} else {
-						System.out.println("Bucket "+hash+" not found, creating...");
+						LOG.debug1("Bucket "+hash+" not found, creating...");
 						s3.createBucket(hash);
-						System.out.println("...done");
+						LOG.debug1("...done");
 					}
 				} catch (Exception e) {
-					throw new IOException("Couldn't create S3 bucket");
+					throw new IOException("Couldn't create S3 bucket:"+e.getMessage());
 				}
 
 				FileOutputStream fos = new FileOutputStream(filename);
@@ -167,7 +163,6 @@ public class PwsS3Storage implements PwsStorage {
 	public byte[] load() throws IOException {
 		try {
 			/* Get the S3 object */
-			System.out.println("Looking for file "+DEFAULT_KEY+" in bucket "+account.getHashedName());
 			S3Object obj = s3.getObject(account.getHashedName(), DEFAULT_KEY);
 			/* Grab the associated data */
 			String data = obj.getData();
@@ -175,7 +170,6 @@ public class PwsS3Storage implements PwsStorage {
 			byte[] bytes = Base64.decode(data.getBytes());
 			return bytes;
 		} catch (Exception e) {
-			e.printStackTrace(System.err);
 			throw new IOException("Unable to load bucket "+account.getHashedName()+": "+e.getMessage());
 		}
 	}

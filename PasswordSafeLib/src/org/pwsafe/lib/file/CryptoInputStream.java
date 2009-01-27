@@ -1,6 +1,5 @@
 package org.pwsafe.lib.file;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -8,6 +7,16 @@ import net.sourceforge.blowfishj.SHA1;
 
 import org.pwsafe.lib.crypto.BlowfishPws;
 
+/**
+ * This class is used to decrypt an existing InputStream
+ * while providing an InputStream interface itself.
+ * 
+ * Note that because of the block nature of encryption there
+ * will normally be extra bytes at the end of such a stream.
+ * 
+ * @author mtiller
+ *
+ */
 public class CryptoInputStream extends InputStream {
 	private byte [] block = new byte[16];
 	private int index = 0;
@@ -21,14 +30,20 @@ public class CryptoInputStream extends InputStream {
 	private String passphrase;
 	private InputStream rawStream;
 	private BlowfishPws engine;
+	/**
+	 * Constructor
+	 * @param passphrase The passphrase used to decrypt the stream
+	 * @param stream The stream to be decrypted
+	 */
 	public CryptoInputStream(String passphrase, InputStream stream) {
 		rawStream = stream;
 		this.passphrase = passphrase;
 	}
-	  public static int unsignedByteToInt(byte b) {
-		    return (int) b & 0xFF;
-		    }
 
+	/**
+	 * Read a single byte.  Behind the scenes, a complete block
+	 * must be read in and decrypted.
+	 */
 	public int read() throws IOException {
 		/** first time through, parse header and set up engine */
 		if (salt==null) {
@@ -48,7 +63,6 @@ public class CryptoInputStream extends InputStream {
 		if (index<curBlockSize) {
 			/** Get next byte in existing buffer */
 			index++;
-			//System.out.println("Reading in "+((int)block[index-1] & 0xff));
 			return (int) block[index-1] & 0xff;
 		} else {
 			/** Read a new block */
@@ -56,7 +70,6 @@ public class CryptoInputStream extends InputStream {
 			if (curBlockSize==-1) { return -1; }
 			engine.decrypt(block);
 			index = 1;
-			//System.out.println("Reading in "+((int)block[0] & 0xff));
 			return (int)block[0] & 0xff;
 		}
 	}
@@ -81,6 +94,9 @@ public class CryptoInputStream extends InputStream {
 		return new BlowfishPws( sha1.getDigest(), ipThing );
 	}
 	
+	/**
+	 * Closes the stream (and the stream it is reading from)
+	 */
 	public void close() throws IOException {
 		rawStream.close();
 		super.close();

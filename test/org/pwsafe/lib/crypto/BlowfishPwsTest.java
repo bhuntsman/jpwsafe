@@ -1,9 +1,15 @@
 package org.pwsafe.lib.crypto;
 
+import junit.framework.TestCase;
+
+import org.bouncycastle.crypto.DataLengthException;
+import org.bouncycastle.crypto.InvalidCipherTextException;
+import org.bouncycastle.crypto.engines.BlowfishEngine;
+import org.bouncycastle.crypto.modes.CBCBlockCipher;
+import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
+import org.bouncycastle.crypto.params.KeyParameter;
 import org.pwsafe.lib.Util;
 import org.pwsafe.lib.exception.PasswordSafeException;
-
-import junit.framework.TestCase;
 
 public class BlowfishPwsTest extends TestCase {
 	// This cipher text comes from baseline BlowfishPws data.
@@ -197,5 +203,73 @@ public class BlowfishPwsTest extends TestCase {
 			runBCRoundTrip();
 			runJRoundTrip();
 		}
+	}
+	
+	public void testBareBC() {
+		CBCBlockCipher cipher = new CBCBlockCipher(new BlowfishEngine());
+    	KeyParameter ekp = new KeyParameter(Util.cloneByteArray(k16));
+
+		cipher.init(true, ekp);
+		
+		byte[] orig = new byte[64];
+		Util.newRandBytes(orig);
+		byte[] buf16 = Util.cloneByteArray(orig);
+		byte[] enc = new byte[buf16.length];
+		
+		System.out.println("orig  = "+Util.bytesToHex(orig));
+		System.out.println("buf16 = "+Util.bytesToHex(orig));
+		for(int i=0;i<orig.length;i+=8) {
+			System.out.println("enc"+i+" = "+Util.bytesToHex(enc));
+			cipher.processBlock(buf16, i, enc, i);
+		}
+		System.out.println("enc = "+Util.bytesToHex(enc));
+		
+		KeyParameter dkp = new KeyParameter(Util.cloneByteArray(k16));
+		
+		buf16 = Util.cloneByteArray(enc);
+		cipher = new CBCBlockCipher(new BlowfishEngine());
+		cipher.init(false, dkp);
+		
+		byte[] dec = new byte[buf16.length];
+		
+		for(int i=0;i<orig.length;i+=8) {
+			System.out.println("dec"+i+" = "+Util.bytesToHex(dec));
+			cipher.processBlock(buf16, i, dec, i);
+		}
+		System.out.println("dec64 = "+Util.bytesToHex(dec));
+		System.out.println("orig = "+Util.bytesToHex(orig));
+		assertEquals(Util.bytesToHex(dec), Util.bytesToHex(orig));
+	}
+	public void testPaddedBC() throws DataLengthException, IllegalStateException, InvalidCipherTextException {
+		PaddedBufferedBlockCipher cipher = new PaddedBufferedBlockCipher(new CBCBlockCipher(new BlowfishEngine()));
+    	KeyParameter ekp = new KeyParameter(Util.cloneByteArray(k16));
+
+		cipher.init(true, ekp);
+		
+		byte[] orig = new byte[64];
+		Util.newRandBytes(orig);
+		byte[] buf16 = Util.cloneByteArray(orig);
+		byte[] enc = new byte[buf16.length*2];
+		
+		System.out.println("orig  = "+Util.bytesToHex(orig));
+		System.out.println("buf16 = "+Util.bytesToHex(orig));
+		int len = cipher.processBytes(buf16, 0, buf16.length, enc, 0);
+		if (len<buf16.length) {
+			int rem = cipher.doFinal(enc, len);
+		}
+		System.out.println("enc64 = "+Util.bytesToHex(enc));
+		
+		KeyParameter dkp = new KeyParameter(Util.cloneByteArray(k16));
+		
+		cipher = new PaddedBufferedBlockCipher(new CBCBlockCipher(new BlowfishEngine()));
+		cipher.init(false, dkp);
+		
+		byte[] dec = new byte[buf16.length];
+		
+		len = cipher.processBytes(buf16, 0, buf16.length, dec, 0);
+		assertEquals(len,buf16.length);
+		System.out.println("dec64 = "+Util.bytesToHex(dec));
+		System.out.println("orig = "+Util.bytesToHex(orig));
+		assertEquals(Util.bytesToHex(dec), Util.bytesToHex(orig));
 	}
 }

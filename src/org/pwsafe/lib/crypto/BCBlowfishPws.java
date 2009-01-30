@@ -134,7 +134,7 @@ public class BCBlowfishPws
 		div = new ParametersWithIV(dkp, ivBytes);
 		eiv = new ParametersWithIV(ekp, ivBytes);
 		decipher.init(false, div);
-		encipher.init(false, eiv);
+		encipher.init(true, eiv);
 	}
 
 	private static byte[] zeroIV() {

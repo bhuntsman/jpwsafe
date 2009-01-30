@@ -10,33 +10,28 @@
 package org.pwsafe.lib.crypto;
 
 import java.nio.ByteBuffer;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.ShortBufferException;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
-
+import org.bouncycastle.crypto.engines.BlowfishEngine;
+import org.bouncycastle.crypto.modes.CBCBlockCipher;
+import org.bouncycastle.crypto.params.KeyParameter;
+import org.bouncycastle.crypto.params.ParametersWithIV;
 import org.pwsafe.lib.Util;
 import org.pwsafe.lib.exception.PasswordSafeException;
 
 /**
- * An extension to the BlowfishJ.BlowfishCBC to allow it to be used for PasswordSafe. Byte 
- * order differences prevent BlowfishCBC being used directly.
+ * A reimplementation of the BlowfishPws class to use the Bouncy Castle
+ * implementation of Blowfish.
  * 
- * @author Kevin Preece
+ * @author Michael Tiller
  */
 public class BCBlowfishPws
 { 
-	private Cipher cipher;
-	private IvParameterSpec iv;
-	private SecretKeySpec secretKeySpec;
+	private CBCBlockCipher decipher;
+	private CBCBlockCipher encipher;
+	private ParametersWithIV div;
+	private KeyParameter dkp;
+	private ParametersWithIV eiv;
+	private KeyParameter ekp;
 	
 	/**
 	 * Constructor, sets the initial vector to zero.
@@ -59,7 +54,6 @@ public class BCBlowfishPws
 	public BCBlowfishPws( byte[] bfkey, long lInitCBCIV ) throws PasswordSafeException
 	{
 		this(bfkey, makeByteKey(lInitCBCIV));
-		Cipher cipher = null;
 	}
 
 	/**
@@ -69,30 +63,18 @@ public class BCBlowfishPws
 	 * @param initCBCIV the initial vector.
 	 * @throws PasswordSafeException 
 	 */
-	public BCBlowfishPws( byte[] bfkey, byte[] ivBytes ) throws PasswordSafeException
+	public BCBlowfishPws( byte[] bfkey, byte[] ivBytes )
 	{
-
-		// create a SecretKeySpec from key material
-		secretKeySpec = new SecretKeySpec(bfkey, "Blowfish");
-		
-		// get Cipher and init it for encryption
-		try {
-			cipher = Cipher.getInstance("Blowfish/CBC/PKCS5Padding", "IAIK");
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			throw new PasswordSafeException("Cipher error: "+e.getMessage());
-		} catch (NoSuchProviderException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			throw new PasswordSafeException("Cipher error: "+e.getMessage());
-		} catch (NoSuchPaddingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			throw new PasswordSafeException("Cipher error: "+e.getMessage());
-		}
-
-		setCBCIV( ivBytes );
+		System.out.println("bfkey = "+Util.bytesToHex(bfkey));
+		BlowfishEngine tfe = new BlowfishEngine();
+    	decipher = new CBCBlockCipher(tfe);
+    	encipher = new CBCBlockCipher(tfe);
+    	dkp = new KeyParameter(bfkey);
+    	div = new ParametersWithIV(dkp, ivBytes);
+    	ekp = new KeyParameter(bfkey);
+    	eiv = new ParametersWithIV(ekp, ivBytes);
+		decipher.init(false, div);
+		encipher.init(true, eiv);
 	}
 
 	/**
@@ -103,20 +85,18 @@ public class BCBlowfishPws
 	 */
 	public void decrypt( byte[] buffer ) throws PasswordSafeException
 	{
+		int bs = decipher.getBlockSize();
+		byte[] temp = new byte[buffer.length];
 		Util.bytesToLittleEndian( buffer );
 
-		try {
-			cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, iv);
-		} catch (InvalidKeyException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			throw new PasswordSafeException("Invalid decryption key: "+e.getMessage());
-		} catch (InvalidAlgorithmParameterException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			throw new PasswordSafeException("Invalid algorithm parameter: "+e.getMessage());
+		if ((buffer.length % bs)!=0) {
+			throw new PasswordSafeException("Block size must be a multiple of cipher block size ("+bs+")");
 		}
-
+		for(int i=0;i<buffer.length;i+=bs) {
+			decipher.processBlock(buffer, i, temp, i);
+		}
+		
+		Util.copyBytes(temp, buffer);
 		Util.bytesToLittleEndian( buffer );
 	}
 
@@ -126,43 +106,21 @@ public class BCBlowfishPws
 	 * @param buffer the buffer to be encrypted.
 	 * @throws PasswordSafeException 
 	 */
-	public void encrypt( byte[] input ) throws PasswordSafeException
+	public void encrypt( byte[] buffer ) throws PasswordSafeException
 	{
-		Util.bytesToLittleEndian( input );
-        try {
-			cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, iv);
-		} catch (InvalidKeyException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			throw new PasswordSafeException("Invalid key: "+e.getMessage());
-		} catch (InvalidAlgorithmParameterException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			throw new PasswordSafeException("Invalid algorithm parameter: "+e.getMessage());
+		int bs = encipher.getBlockSize();
+		byte[] temp = new byte[buffer.length];
+		Util.bytesToLittleEndian( buffer );
+
+		if ((buffer.length % bs)!=0) {
+			throw new PasswordSafeException("Block size must be a multiple of cipher block size ("+bs+")");
 		}
-        
-        byte[] cipherText = new byte[cipher.getOutputSize(input.length)];
-        
-        int ctLength;
-        
-        try {
-			ctLength = cipher.update(input, 0, input.length, cipherText, 0);
-			ctLength += cipher.doFinal(cipherText, ctLength);
-		} catch (IllegalBlockSizeException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			throw new PasswordSafeException("Illegal block size: "+e.getMessage());
-		} catch (ShortBufferException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			throw new PasswordSafeException("Short buffer: "+e.getMessage());
-		} catch (BadPaddingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			throw new PasswordSafeException("Bad padding: "+e.getMessage());
+		for(int i=0;i<buffer.length;i+=bs) {
+			encipher.processBlock(buffer, i, temp, i);
 		}
-        
-		Util.bytesToLittleEndian( input );
+		
+		Util.copyBytes(temp, buffer);
+		Util.bytesToLittleEndian( buffer );
 	}
 
 	/**
@@ -173,7 +131,10 @@ public class BCBlowfishPws
 	public void setCBCIV( byte[] ivBytes )
 	{
 		// Set the initial vector
-		iv = new IvParameterSpec(ivBytes);
+		div = new ParametersWithIV(dkp, ivBytes);
+		eiv = new ParametersWithIV(ekp, ivBytes);
+		decipher.init(false, div);
+		encipher.init(false, eiv);
 	}
 
 	private static byte[] zeroIV() {
@@ -182,7 +143,7 @@ public class BCBlowfishPws
 		return ret;
 	}
 	
-	private static byte[] makeByteKey(long key) {
+	public static byte[] makeByteKey(long key) {
 		byte ivBytes[] = new byte[8];
 		ByteBuffer buf = ByteBuffer.wrap(ivBytes);  
 		buf.putLong(key);

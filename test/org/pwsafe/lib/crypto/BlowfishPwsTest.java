@@ -205,14 +205,44 @@ public class BlowfishPwsTest extends TestCase {
 		}
 	}
 	
-	public void testBareBC() {
+	public void testFixedBareBC() {
+		runBareBC(k16, pt16, ct16);
+	}	
+	
+	public void testReversedBareBC16() {
+		byte[] lept16 = Util.cloneByteArray(pt16);
+		Util.bytesToLittleEndian(lept16);
+		byte[] lect16 = Util.cloneByteArray(ct16);
+		Util.bytesToLittleEndian(lect16);
+
+		runBareBC(k16, lept16, lect16);
+	}
+	
+	public void testReversedBareBC32() {
+		byte[] lept32 = Util.cloneByteArray(pt32);
+		Util.bytesToLittleEndian(lept32);
+		System.out.println("nopt32 = "+Util.bytesToHex(pt32));
+		System.out.println("lept32 = "+Util.bytesToHex(lept32));
+		byte[] lect32 = Util.cloneByteArray(ct32);
+		Util.bytesToLittleEndian(lect32);
+		System.out.println("noct32 = "+Util.bytesToHex(ct32));
+		System.out.println("lect32 = "+Util.bytesToHex(lect32));
+
+		runBareBC(k32, lept32, lect32);
+	}	
+	
+	public void testRandomBareBC() {
+		byte[] orig = new byte[64];
+		Util.newRandBytes(orig);
+		runBareBC(k16, orig, null);
+	}
+	
+	public void runBareBC(byte[] key, byte[] orig, byte[] expct) {
 		CBCBlockCipher cipher = new CBCBlockCipher(new BlowfishEngine());
-    	KeyParameter ekp = new KeyParameter(Util.cloneByteArray(k16));
+    	KeyParameter ekp = new KeyParameter(Util.cloneByteArray(key));
 
 		cipher.init(true, ekp);
 		
-		byte[] orig = new byte[64];
-		Util.newRandBytes(orig);
 		byte[] buf16 = Util.cloneByteArray(orig);
 		byte[] enc = new byte[buf16.length];
 		
@@ -224,7 +254,12 @@ public class BlowfishPwsTest extends TestCase {
 		}
 		System.out.println("enc = "+Util.bytesToHex(enc));
 		
-		KeyParameter dkp = new KeyParameter(Util.cloneByteArray(k16));
+		if (expct!=null) {
+			System.out.println("exp = "+Util.bytesToHex(enc));
+			assertEquals(Util.bytesToHex(expct), Util.bytesToHex(enc));
+		}
+		
+		KeyParameter dkp = new KeyParameter(Util.cloneByteArray(key));
 		
 		buf16 = Util.cloneByteArray(enc);
 		cipher = new CBCBlockCipher(new BlowfishEngine());
@@ -236,38 +271,6 @@ public class BlowfishPwsTest extends TestCase {
 			System.out.println("dec"+i+" = "+Util.bytesToHex(dec));
 			cipher.processBlock(buf16, i, dec, i);
 		}
-		System.out.println("dec64 = "+Util.bytesToHex(dec));
-		System.out.println("orig = "+Util.bytesToHex(orig));
-		assertEquals(Util.bytesToHex(dec), Util.bytesToHex(orig));
-	}
-	public void testPaddedBC() throws DataLengthException, IllegalStateException, InvalidCipherTextException {
-		PaddedBufferedBlockCipher cipher = new PaddedBufferedBlockCipher(new CBCBlockCipher(new BlowfishEngine()));
-    	KeyParameter ekp = new KeyParameter(Util.cloneByteArray(k16));
-
-		cipher.init(true, ekp);
-		
-		byte[] orig = new byte[64];
-		Util.newRandBytes(orig);
-		byte[] buf16 = Util.cloneByteArray(orig);
-		byte[] enc = new byte[buf16.length*2];
-		
-		System.out.println("orig  = "+Util.bytesToHex(orig));
-		System.out.println("buf16 = "+Util.bytesToHex(orig));
-		int len = cipher.processBytes(buf16, 0, buf16.length, enc, 0);
-		if (len<buf16.length) {
-			int rem = cipher.doFinal(enc, len);
-		}
-		System.out.println("enc64 = "+Util.bytesToHex(enc));
-		
-		KeyParameter dkp = new KeyParameter(Util.cloneByteArray(k16));
-		
-		cipher = new PaddedBufferedBlockCipher(new CBCBlockCipher(new BlowfishEngine()));
-		cipher.init(false, dkp);
-		
-		byte[] dec = new byte[buf16.length];
-		
-		len = cipher.processBytes(buf16, 0, buf16.length, dec, 0);
-		assertEquals(len,buf16.length);
 		System.out.println("dec64 = "+Util.bytesToHex(dec));
 		System.out.println("orig = "+Util.bytesToHex(orig));
 		assertEquals(Util.bytesToHex(dec), Util.bytesToHex(orig));

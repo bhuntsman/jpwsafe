@@ -73,8 +73,11 @@ public class BCBlowfishPws
     	div = new ParametersWithIV(dkp, ivBytes);
     	ekp = new KeyParameter(bfkey);
     	eiv = new ParametersWithIV(ekp, ivBytes);
-		decipher.init(false, div);
-		encipher.init(true, eiv);
+		//decipher.init(false, div);
+		//encipher.init(true, eiv);
+		decipher.init(false, dkp);
+		encipher.init(true, ekp);
+
 	}
 
 	/**

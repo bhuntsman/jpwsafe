@@ -60,24 +60,21 @@ public class BCBlowfishPws
 	 * Constructor, sets the initial vector to the value given.
 	 * 
 	 * @param bfkey      the encryption/decryption key.
-	 * @param initCBCIV the initial vector.
+	 * @param ivBytes the initial vector.
 	 * @throws PasswordSafeException 
 	 */
 	public BCBlowfishPws( byte[] bfkey, byte[] ivBytes )
 	{
-		System.out.println("bfkey = "+Util.bytesToHex(bfkey));
-		BlowfishEngine tfe = new BlowfishEngine();
-    	decipher = new CBCBlockCipher(tfe);
-    	encipher = new CBCBlockCipher(tfe);
+		byte[] riv = Util.cloneByteArray(ivBytes);
+		Util.bytesToLittleEndian(riv);
+    	decipher = new CBCBlockCipher(new BlowfishEngine());
+    	encipher = new CBCBlockCipher(new BlowfishEngine());
     	dkp = new KeyParameter(bfkey);
-    	div = new ParametersWithIV(dkp, ivBytes);
+    	div = new ParametersWithIV(dkp, riv);
     	ekp = new KeyParameter(bfkey);
-    	eiv = new ParametersWithIV(ekp, ivBytes);
-		//decipher.init(false, div);
-		//encipher.init(true, eiv);
-		decipher.init(false, dkp);
-		encipher.init(true, ekp);
-
+    	eiv = new ParametersWithIV(ekp, riv);
+		decipher.init(false, div);
+		encipher.init(true, eiv);
 	}
 
 	/**
@@ -121,9 +118,9 @@ public class BCBlowfishPws
 		for(int i=0;i<buffer.length;i+=bs) {
 			encipher.processBlock(buffer, i, temp, i);
 		}
-		
+
+		Util.bytesToLittleEndian( temp );
 		Util.copyBytes(temp, buffer);
-		Util.bytesToLittleEndian( buffer );
 	}
 
 	/**
@@ -133,9 +130,11 @@ public class BCBlowfishPws
 	 */
 	public void setCBCIV( byte[] ivBytes )
 	{
+		byte[] riv = Util.cloneByteArray(ivBytes);
+		Util.bytesToLittleEndian(riv);
 		// Set the initial vector
-		div = new ParametersWithIV(dkp, ivBytes);
-		eiv = new ParametersWithIV(ekp, ivBytes);
+		div = new ParametersWithIV(dkp, riv);
+		eiv = new ParametersWithIV(ekp, riv);
 		decipher.init(false, div);
 		encipher.init(true, eiv);
 	}

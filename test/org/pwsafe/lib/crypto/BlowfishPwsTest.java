@@ -2,12 +2,10 @@ package org.pwsafe.lib.crypto;
 
 import junit.framework.TestCase;
 
-import org.bouncycastle.crypto.DataLengthException;
-import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.crypto.engines.BlowfishEngine;
 import org.bouncycastle.crypto.modes.CBCBlockCipher;
-import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
 import org.bouncycastle.crypto.params.KeyParameter;
+import org.bouncycastle.crypto.params.ParametersWithIV;
 import org.pwsafe.lib.Util;
 import org.pwsafe.lib.exception.PasswordSafeException;
 
@@ -107,12 +105,14 @@ public class BlowfishPwsTest extends TestCase {
 	}
 	
 	public void runBCRoundTrip() throws PasswordSafeException {
-		BCBlowfishPws ebc16 = new BCBlowfishPws(k16);
-		BCBlowfishPws ebc32 = new BCBlowfishPws(k32);
-		BlowfishPws ej16 = new BlowfishPws(k16);
-		BlowfishPws ej32 = new BlowfishPws(k32);
-		BCBlowfishPws dbc16 = new BCBlowfishPws(k16);
-		BCBlowfishPws dbc32 = new BCBlowfishPws(k32);
+		byte[] iv = new byte[8];
+		Util.newRandBytes(iv);
+		BCBlowfishPws ebc16 = new BCBlowfishPws(k16, iv);
+		BCBlowfishPws ebc32 = new BCBlowfishPws(k32, iv);
+		BlowfishPws ej16 = new BlowfishPws(k16, iv);
+		BlowfishPws ej32 = new BlowfishPws(k32, iv);
+		BCBlowfishPws dbc16 = new BCBlowfishPws(k16, iv);
+		BCBlowfishPws dbc32 = new BCBlowfishPws(k32, iv);
 
 		byte[] buf16 = new byte[64];
 		Util.newRandBytes(buf16);
@@ -199,36 +199,18 @@ public class BlowfishPwsTest extends TestCase {
 	}
 	
 	public void testRunTrip() throws PasswordSafeException {
-		for(int i=0;i<25;i++) {
+		for(int i=0;i<100;i++) {
 			runBCRoundTrip();
 			runJRoundTrip();
 		}
 	}
 	
-	public void testFixedBareBC() {
+	public void testFixedBareBC16() {
 		runBareBC(k16, pt16, ct16);
 	}	
-	
-	public void testReversedBareBC16() {
-		byte[] lept16 = Util.cloneByteArray(pt16);
-		Util.bytesToLittleEndian(lept16);
-		byte[] lect16 = Util.cloneByteArray(ct16);
-		Util.bytesToLittleEndian(lect16);
 
-		runBareBC(k16, lept16, lect16);
-	}
-	
-	public void testReversedBareBC32() {
-		byte[] lept32 = Util.cloneByteArray(pt32);
-		Util.bytesToLittleEndian(lept32);
-		System.out.println("nopt32 = "+Util.bytesToHex(pt32));
-		System.out.println("lept32 = "+Util.bytesToHex(lept32));
-		byte[] lect32 = Util.cloneByteArray(ct32);
-		Util.bytesToLittleEndian(lect32);
-		System.out.println("noct32 = "+Util.bytesToHex(ct32));
-		System.out.println("lect32 = "+Util.bytesToHex(lect32));
-
-		runBareBC(k32, lept32, lect32);
+	public void testFixedBareBC32() {
+		runBareBC(k32, pt32, ct32);
 	}	
 	
 	public void testRandomBareBC() {
@@ -239,10 +221,14 @@ public class BlowfishPwsTest extends TestCase {
 	
 	public void runBareBC(byte[] key, byte[] orig, byte[] expct) {
 		CBCBlockCipher cipher = new CBCBlockCipher(new BlowfishEngine());
+		byte[] iv = new byte[8];
+		for(int j=0;j<8;j++) iv[j] = 0;
     	KeyParameter ekp = new KeyParameter(Util.cloneByteArray(key));
+		ParametersWithIV eiv = new ParametersWithIV(ekp, iv);
 
-		cipher.init(true, ekp);
+		cipher.init(true, eiv);
 		
+		Util.bytesToLittleEndian(orig);
 		byte[] buf16 = Util.cloneByteArray(orig);
 		byte[] enc = new byte[buf16.length];
 		
@@ -253,17 +239,20 @@ public class BlowfishPwsTest extends TestCase {
 			cipher.processBlock(buf16, i, enc, i);
 		}
 		System.out.println("enc = "+Util.bytesToHex(enc));
+		Util.bytesToLittleEndian(enc);
 		
 		if (expct!=null) {
 			System.out.println("exp = "+Util.bytesToHex(enc));
 			assertEquals(Util.bytesToHex(expct), Util.bytesToHex(enc));
 		}
 		
+		Util.bytesToLittleEndian(enc);
 		KeyParameter dkp = new KeyParameter(Util.cloneByteArray(key));
+		ParametersWithIV div = new ParametersWithIV(dkp, iv);
 		
 		buf16 = Util.cloneByteArray(enc);
 		cipher = new CBCBlockCipher(new BlowfishEngine());
-		cipher.init(false, dkp);
+		cipher.init(false, div);
 		
 		byte[] dec = new byte[buf16.length];
 		

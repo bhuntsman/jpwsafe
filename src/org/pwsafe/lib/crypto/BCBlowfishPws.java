@@ -11,6 +11,7 @@ package org.pwsafe.lib.crypto;
 
 import java.nio.ByteBuffer;
 
+import org.bouncycastle.crypto.BlockCipher;
 import org.bouncycastle.crypto.engines.BlowfishEngine;
 import org.bouncycastle.crypto.modes.CBCBlockCipher;
 import org.bouncycastle.crypto.params.KeyParameter;
@@ -26,8 +27,8 @@ import org.pwsafe.lib.exception.PasswordSafeException;
  */
 public class BCBlowfishPws
 { 
-	private CBCBlockCipher decipher;
-	private CBCBlockCipher encipher;
+	private BlockCipher decipher;
+	private BlockCipher encipher;
 	private ParametersWithIV div;
 	private KeyParameter dkp;
 	private ParametersWithIV eiv;
@@ -37,11 +38,12 @@ public class BCBlowfishPws
 	 * Constructor, sets the initial vector to zero.
 	 * 
 	 * @param bfkey the encryption/decryption key.
+	 * @param cbc Use CBC mode (otherwise ECB is used).  Normally this should be true.
 	 * @throws PasswordSafeException 
 	 */
-	public BCBlowfishPws( byte[] bfkey ) throws PasswordSafeException
+	public BCBlowfishPws( byte[] bfkey, boolean cbc ) throws PasswordSafeException
 	{
-		this(bfkey, zeroIV());
+		this(bfkey, zeroIV(), cbc);
 	}
 
 	/**
@@ -49,11 +51,12 @@ public class BCBlowfishPws
 	 * 
 	 * @param bfkey      the encryption/decryption key.
 	 * @param lInitCBCIV the initial vector.
+	 * @param cbc Use CBC mode (otherwise ECB is used).  Normally this should be true.
 	 * @throws PasswordSafeException 
 	 */
-	public BCBlowfishPws( byte[] bfkey, long lInitCBCIV ) throws PasswordSafeException
+	public BCBlowfishPws( byte[] bfkey, long lInitCBCIV, boolean cbc ) throws PasswordSafeException
 	{
-		this(bfkey, makeByteKey(lInitCBCIV));
+		this(bfkey, makeByteKey(lInitCBCIV), cbc);
 	}
 
 	/**
@@ -61,14 +64,21 @@ public class BCBlowfishPws
 	 * 
 	 * @param bfkey      the encryption/decryption key.
 	 * @param ivBytes the initial vector.
+	 * @param cbc Use CBC mode (otherwise ECB is used).  Normally this should be true.
 	 * @throws PasswordSafeException 
 	 */
-	public BCBlowfishPws( byte[] bfkey, byte[] ivBytes )
+	public BCBlowfishPws( byte[] bfkey, byte[] ivBytes, boolean cbc )
 	{
 		byte[] riv = Util.cloneByteArray(ivBytes);
 		Util.bytesToLittleEndian(riv);
-    	decipher = new CBCBlockCipher(new BlowfishEngine());
-    	encipher = new CBCBlockCipher(new BlowfishEngine());
+		if (cbc) {
+			decipher = new CBCBlockCipher(new BlowfishEngine());
+			encipher = new CBCBlockCipher(new BlowfishEngine());
+		} else {
+			decipher = new BlowfishEngine();
+			encipher = new BlowfishEngine();
+			/* ECB mode */
+		}
     	dkp = new KeyParameter(bfkey);
     	div = new ParametersWithIV(dkp, riv);
     	ekp = new KeyParameter(bfkey);

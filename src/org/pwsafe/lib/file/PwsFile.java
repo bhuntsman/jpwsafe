@@ -18,11 +18,10 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import net.sourceforge.blowfishj.SHA1;
-
 import org.pwsafe.lib.I18nHelper;
 import org.pwsafe.lib.Log;
 import org.pwsafe.lib.Util;
+import org.pwsafe.lib.crypto.BCSHA1;
 import org.pwsafe.lib.crypto.BlowfishPws;
 import org.pwsafe.lib.exception.EndOfFileException;
 import org.pwsafe.lib.exception.PasswordSafeException;
@@ -404,10 +403,10 @@ public abstract class PwsFile
 	 */
 	private BlowfishPws makeBlowfish( byte [] passphrase )
 	{
-		SHA1	sha1;
+		BCSHA1	sha1;
 		byte	salt[];
 		
-		sha1 = new SHA1();
+		sha1 = new BCSHA1();
 		salt = Header.getSalt();
 
 		sha1.update( passphrase, 0, passphrase.length );

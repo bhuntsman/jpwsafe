@@ -38,8 +38,8 @@ public class BlowfishPwsTest extends TestCase {
     
     public void BCDecrypt() throws PasswordSafeException {
 		System.out.println("--> Testing decryption");
-		BCBlowfishPws bc16 = new BCBlowfishPws(k16);
-		BCBlowfishPws bc32 = new BCBlowfishPws(k32);
+		BCBlowfishPws bc16 = new BCBlowfishPws(k16, true);
+		BCBlowfishPws bc32 = new BCBlowfishPws(k32, true);
 		
 		byte[] buf16 = Util.unsignedToSigned(cipherText);
 		byte[] buf32 = Util.unsignedToSigned(cipherText32);
@@ -62,8 +62,8 @@ public class BlowfishPwsTest extends TestCase {
 		BCBlowfishPws bc32;
 		
 		System.out.println("--> Testing encryption");
-		bc16 = new BCBlowfishPws(k16);
-		bc32 = new BCBlowfishPws(k32);
+		bc16 = new BCBlowfishPws(k16, true);
+		bc32 = new BCBlowfishPws(k32, true);
 		
 		buf16 = Util.unsignedToSigned(plainText);
 		buf32 = Util.unsignedToSigned(plainText32);
@@ -107,12 +107,12 @@ public class BlowfishPwsTest extends TestCase {
 	public void runBCRoundTrip() throws PasswordSafeException {
 		byte[] iv = new byte[8];
 		Util.newRandBytes(iv);
-		BCBlowfishPws ebc16 = new BCBlowfishPws(k16, iv);
-		BCBlowfishPws ebc32 = new BCBlowfishPws(k32, iv);
+		BCBlowfishPws ebc16 = new BCBlowfishPws(k16, iv, true);
+		BCBlowfishPws ebc32 = new BCBlowfishPws(k32, iv, true);
 		BlowfishPws ej16 = new BlowfishPws(k16, iv);
 		BlowfishPws ej32 = new BlowfishPws(k32, iv);
-		BCBlowfishPws dbc16 = new BCBlowfishPws(k16, iv);
-		BCBlowfishPws dbc32 = new BCBlowfishPws(k32, iv);
+		BCBlowfishPws dbc16 = new BCBlowfishPws(k16, iv, true);
+		BCBlowfishPws dbc32 = new BCBlowfishPws(k32, iv, true);
 
 		byte[] buf16 = new byte[64];
 		Util.newRandBytes(buf16);

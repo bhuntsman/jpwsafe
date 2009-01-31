@@ -9,8 +9,7 @@ import java.io.InputStreamReader;
 import java.util.Vector;
 
 import org.pwsafe.lib.Log;
-
-import net.sourceforge.blowfishj.SHA1;
+import org.pwsafe.lib.crypto.BCSHA1;
 
 import com.amazonaws.crypto.Base64;
 import com.amazonaws.s3.S3;
@@ -47,7 +46,7 @@ public class PwsS3Storage implements PwsStorage {
 		String secretKey;
 		private String hashedBucket;
 		public AccountDetails(String bucket, String id, String secret) {
-			SHA1 sha1 = new SHA1();
+			BCSHA1 sha1 = new BCSHA1();
 			this.bucketTitle = bucket;
 			this.keyId = id;
 			this.secretKey = secret;

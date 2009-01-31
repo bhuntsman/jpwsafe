@@ -3,9 +3,9 @@ package org.pwsafe.lib.file;
 import java.io.IOException;
 import java.io.InputStream;
 
-import net.sourceforge.blowfishj.SHA1;
-
-import org.pwsafe.lib.crypto.BlowfishPws;
+import org.pwsafe.lib.crypto.BCBlowfishPws;
+import org.pwsafe.lib.crypto.BCSHA1;
+import org.pwsafe.lib.exception.PasswordSafeException;
 
 /**
  * This class is used to decrypt an existing InputStream
@@ -29,7 +29,7 @@ public class CryptoInputStream extends InputStream {
 	
 	private String passphrase;
 	private InputStream rawStream;
-	private BlowfishPws engine;
+	private BCBlowfishPws engine;
 	/**
 	 * Constructor
 	 * @param passphrase The passphrase used to decrypt the stream
@@ -58,7 +58,11 @@ public class CryptoInputStream extends InputStream {
 			engine = makeBlowfish(passphrase.getBytes());
 			curBlockSize = rawStream.read(block);
 			if (curBlockSize==-1) { return -1; } 
-			engine.decrypt(block);
+			try {
+				engine.decrypt(block);
+			} catch (PasswordSafeException e) {
+				LOG.error(e.getMessage());
+			}
 		}
 		if (index<curBlockSize) {
 			/** Get next byte in existing buffer */
@@ -81,17 +85,17 @@ public class CryptoInputStream extends InputStream {
 	 * 
 	 * @return A properly initialised {@link BlowfishPws} object.
 	 */
-	private BlowfishPws makeBlowfish( byte [] passphrase )
+	private BCBlowfishPws makeBlowfish( byte [] passphrase )
 	{
-		SHA1	sha1;
+		BCSHA1	sha1;
 		
-		sha1 = new SHA1();
+		sha1 = new BCSHA1();
 
 		sha1.update( passphrase, 0, passphrase.length );
 		sha1.update( salt, 0, salt.length );
 		sha1.finalize();
 
-		return new BlowfishPws( sha1.getDigest(), ipThing );
+		return new BCBlowfishPws( sha1.getDigest(), ipThing, true );
 	}
 	
 	/**

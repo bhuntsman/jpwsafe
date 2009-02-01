@@ -25,8 +25,9 @@ import org.pwsafe.lib.exception.PasswordSafeException;
  * 
  * @author Michael Tiller
  */
-public class BCBlowfishPws
+public class BlowfishPws
 { 
+	private boolean cbc;
 	private BlockCipher decipher;
 	private BlockCipher encipher;
 	private ParametersWithIV div;
@@ -41,9 +42,9 @@ public class BCBlowfishPws
 	 * @param cbc Use CBC mode (otherwise ECB is used).  Normally this should be true.
 	 * @throws PasswordSafeException 
 	 */
-	public BCBlowfishPws( byte[] bfkey, boolean cbc ) throws PasswordSafeException
+	public BlowfishPws( byte[] bfkey ) throws PasswordSafeException
 	{
-		this(bfkey, zeroIV(), cbc);
+		this(bfkey, zeroIV(), true);
 	}
 
 	/**
@@ -54,9 +55,9 @@ public class BCBlowfishPws
 	 * @param cbc Use CBC mode (otherwise ECB is used).  Normally this should be true.
 	 * @throws PasswordSafeException 
 	 */
-	public BCBlowfishPws( byte[] bfkey, long lInitCBCIV, boolean cbc ) throws PasswordSafeException
+	public BlowfishPws( byte[] bfkey, long lInitCBCIV ) throws PasswordSafeException
 	{
-		this(bfkey, makeByteKey(lInitCBCIV), cbc);
+		this(bfkey, makeByteKey(lInitCBCIV), true);
 	}
 
 	/**
@@ -67,24 +68,43 @@ public class BCBlowfishPws
 	 * @param cbc Use CBC mode (otherwise ECB is used).  Normally this should be true.
 	 * @throws PasswordSafeException 
 	 */
-	public BCBlowfishPws( byte[] bfkey, byte[] ivBytes, boolean cbc )
+	public BlowfishPws( byte[] bfkey, byte[] ivBytes ) {
+		this(bfkey, ivBytes, true);
+	}
+
+	/**
+	 * Constructor, sets the initial vector to the value given.
+	 * 
+	 * @param bfkey      the encryption/decryption key.
+	 * @param ivBytes the initial vector.
+	 * @param cbc Use CBC mode (otherwise ECB is used).  Normally this should be true.
+	 * @throws PasswordSafeException 
+	 */
+	BlowfishPws( byte[] bfkey, byte[] ivBytes, boolean cbc )
 	{
+		this.cbc = cbc;
 		byte[] riv = Util.cloneByteArray(ivBytes);
 		Util.bytesToLittleEndian(riv);
 		if (cbc) {
 			decipher = new CBCBlockCipher(new BlowfishEngine());
 			encipher = new CBCBlockCipher(new BlowfishEngine());
+	    	dkp = new KeyParameter(bfkey);
+	    	div = new ParametersWithIV(dkp, riv);
+	    	ekp = new KeyParameter(bfkey);
+	    	eiv = new ParametersWithIV(ekp, riv);
+			decipher.init(false, div);
+			encipher.init(true, eiv);
 		} else {
+			/* ECB mode */
 			decipher = new BlowfishEngine();
 			encipher = new BlowfishEngine();
-			/* ECB mode */
+	    	dkp = new KeyParameter(bfkey);
+	    	ekp = new KeyParameter(bfkey);
+	    	div = null;
+	    	eiv = null;
+			decipher.init(false, dkp);
+			encipher.init(true, ekp);
 		}
-    	dkp = new KeyParameter(bfkey);
-    	div = new ParametersWithIV(dkp, riv);
-    	ekp = new KeyParameter(bfkey);
-    	eiv = new ParametersWithIV(ekp, riv);
-		decipher.init(false, div);
-		encipher.init(true, eiv);
 	}
 
 	/**
@@ -149,7 +169,7 @@ public class BCBlowfishPws
 		encipher.init(true, eiv);
 	}
 
-	private static byte[] zeroIV() {
+	protected static byte[] zeroIV() {
 		byte[] ret = new byte[8];
 		for(int i=0;i<8;i++) { ret[i] = 0; }
 		return ret;

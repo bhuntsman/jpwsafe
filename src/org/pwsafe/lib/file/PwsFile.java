@@ -541,7 +541,11 @@ public abstract class PwsFile
 			throw new IllegalArgumentException( I18nHelper.getInstance().formatMessage("E00001") );
 		}
 		readBytes( buff );
-		Algorithm.decrypt( buff );
+		try {
+			Algorithm.decrypt( buff );
+		} catch (PasswordSafeException e) {
+			LOG.error(e.getMessage());
+		}
 	}
 
 	/**
@@ -725,7 +729,11 @@ public abstract class PwsFile
 		}
 		
 		byte [] temp = Util.cloneByteArray( buff );
-		Algorithm.encrypt( temp );
+		try {
+			Algorithm.encrypt( temp );
+		} catch (PasswordSafeException e) {
+			LOG.error(e.getMessage());
+		}
 		writeBytes( temp );
 	}
 

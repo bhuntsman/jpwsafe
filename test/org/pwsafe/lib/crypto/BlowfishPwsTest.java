@@ -1,6 +1,7 @@
 package org.pwsafe.lib.crypto;
 
 import junit.framework.TestCase;
+import net.sourceforge.blowfishj.BlowfishECB;
 
 import org.bouncycastle.crypto.engines.BlowfishEngine;
 import org.bouncycastle.crypto.modes.CBCBlockCipher;
@@ -38,8 +39,8 @@ public class BlowfishPwsTest extends TestCase {
     
     public void BCDecrypt() throws PasswordSafeException {
 		System.out.println("--> Testing decryption");
-		BCBlowfishPws bc16 = new BCBlowfishPws(k16, true);
-		BCBlowfishPws bc32 = new BCBlowfishPws(k32, true);
+		BlowfishPws bc16 = new BlowfishPws(k16);
+		BlowfishPws bc32 = new BlowfishPws(k32);
 		
 		byte[] buf16 = Util.unsignedToSigned(cipherText);
 		byte[] buf32 = Util.unsignedToSigned(cipherText32);
@@ -58,12 +59,12 @@ public class BlowfishPwsTest extends TestCase {
 		byte[] buf16 = null;
 		byte[] buf32 = null;
 		
-		BCBlowfishPws bc16;
-		BCBlowfishPws bc32;
+		BlowfishPws bc16;
+		BlowfishPws bc32;
 		
 		System.out.println("--> Testing encryption");
-		bc16 = new BCBlowfishPws(k16, true);
-		bc32 = new BCBlowfishPws(k32, true);
+		bc16 = new BlowfishPws(k16);
+		bc32 = new BlowfishPws(k32);
 		
 		buf16 = Util.unsignedToSigned(plainText);
 		buf32 = Util.unsignedToSigned(plainText32);
@@ -85,34 +86,15 @@ public class BlowfishPwsTest extends TestCase {
 		BCDecrypt();
 	}
 	
-	public void JDecrypt() {
-		BlowfishPws bc16 = new BlowfishPws(k16);
-		BlowfishPws bc32 = new BlowfishPws(k32);
-		
-		System.out.println("--> Testing decryption");
-		byte[] buf16 = Util.unsignedToSigned(cipherText);
-		byte[] buf32 = Util.unsignedToSigned(cipherText32);
-
-		System.out.println("cipherText16 = "+Util.bytesToHex(buf16));
-		bc16.decrypt(buf16);
-		System.out.println("plainText16 = "+Util.bytesToHex(buf16));
-		assertEquals(Util.bytesToHex(pt16),Util.bytesToHex(buf16));
-		
-		System.out.println("cipherText32 = "+Util.bytesToHex(buf32));
-		bc32.decrypt(buf32);
-		System.out.println("plainText32 = "+Util.bytesToHex(buf32));
-		assertEquals(Util.bytesToHex(pt32),Util.bytesToHex(buf32));
-	}
-	
 	public void runBCRoundTrip() throws PasswordSafeException {
 		byte[] iv = new byte[8];
 		Util.newRandBytes(iv);
-		BCBlowfishPws ebc16 = new BCBlowfishPws(k16, iv, true);
-		BCBlowfishPws ebc32 = new BCBlowfishPws(k32, iv, true);
+		BlowfishPws ebc16 = new BlowfishPws(k16, iv, true);
+		BlowfishPws ebc32 = new BlowfishPws(k32, iv, true);
 		BlowfishPws ej16 = new BlowfishPws(k16, iv);
 		BlowfishPws ej32 = new BlowfishPws(k32, iv);
-		BCBlowfishPws dbc16 = new BCBlowfishPws(k16, iv, true);
-		BCBlowfishPws dbc32 = new BCBlowfishPws(k32, iv, true);
+		BlowfishPws dbc16 = new BlowfishPws(k16, iv, true);
+		BlowfishPws dbc32 = new BlowfishPws(k32, iv, true);
 
 		byte[] buf16 = new byte[64];
 		Util.newRandBytes(buf16);
@@ -146,62 +128,10 @@ public class BlowfishPwsTest extends TestCase {
 		
 		assertEquals(Util.bytesToHex(orig),Util.bytesToHex(buf32));
 	}
-	
-	public void runJRoundTrip() {
-		BlowfishPws ej16 = new BlowfishPws(k16);
-		BlowfishPws dj16 = new BlowfishPws(k16);
-		BlowfishPws ej32 = new BlowfishPws(k32);
-		BlowfishPws dj32 = new BlowfishPws(k32);
-
-		byte[] buf16 = new byte[64];
-		Util.newRandBytes(buf16);
-		byte[] orig = Util.cloneByteArray(buf16);
 		
-		ej16.encrypt(buf16);
-		dj16.decrypt(buf16);
-		
-		assertEquals(Util.bytesToHex(orig),Util.bytesToHex(buf16));
-		
-		byte[] buf32 = new byte[64];
-		Util.newRandBytes(buf32);
-		orig = Util.cloneByteArray(buf32);
-		
-		ej32.encrypt(buf32);
-		dj32.decrypt(buf32);
-		
-		assertEquals(Util.bytesToHex(orig),Util.bytesToHex(buf32));
-	}
-	
-	public void JEncrypt() {
-		BlowfishPws bc16 = new BlowfishPws(k16);
-		BlowfishPws bc32 = new BlowfishPws(k32);
-		
-		byte[] buf16 = Util.unsignedToSigned(plainText);
-		byte[] buf32 = Util.unsignedToSigned(plainText32);
-
-		System.out.println("--> Testing encryption");
-		System.out.println("plainText16 = "+Util.bytesToHex(buf16));
-		bc16.encrypt(buf16);
-		System.out.println("cipherText16 = "+Util.bytesToHex(buf16));
-		assertEquals(Util.bytesToHex(ct16),Util.bytesToHex(buf16));
-		
-		System.out.println("plainText32 = "+Util.bytesToHex(buf32));
-		bc32.encrypt(buf32);
-		System.out.println("cipherText32 = "+Util.bytesToHex(buf32));
-		assertEquals(Util.bytesToHex(ct32),Util.bytesToHex(buf32));
-	}
-	
-	public void testBlowfish() throws PasswordSafeException {
-		System.out.println("== Testing BlowfishPws ==");
-
-		JDecrypt();
-		JEncrypt();
-	}
-	
 	public void testRunTrip() throws PasswordSafeException {
 		for(int i=0;i<100;i++) {
 			runBCRoundTrip();
-			runJRoundTrip();
 		}
 	}
 	
@@ -263,5 +193,98 @@ public class BlowfishPwsTest extends TestCase {
 		System.out.println("dec64 = "+Util.bytesToHex(dec));
 		System.out.println("orig = "+Util.bytesToHex(orig));
 		assertEquals(Util.bytesToHex(dec), Util.bytesToHex(orig));
+	}
+	
+	public void testCompareECB() throws Exception {
+		byte [] digest = new byte[16];
+		byte [] input = new byte[16];
+		Util.newRandBytes(digest);
+		Util.newRandBytes(input);
+		BlowfishECB    bfecb = new BlowfishECB(digest, 0, digest.length);
+		BlowfishPwsECB bf	= new BlowfishPwsECB( digest );
+		byte [] tmp1 = Util.cloneByteArray( input );
+		byte [] tmp2 = Util.cloneByteArray( input );
+
+		for ( int ii = 0; ii < 1000; ++ii )
+		{
+			bfecb.encrypt(tmp1, 0, tmp1, 0, tmp1.length);
+			bf.encrypt( tmp2 );
+		}
+		assertEquals(Util.bytesToHex(tmp1), Util.bytesToHex(tmp2));
+	}
+	
+	public void testBaselineECB() throws Exception {
+	    // test vector #1 (checking for the "signed bug")
+	    byte[] testKey1 = { (byte) 0x1c, (byte) 0x58, (byte) 0x7f, (byte) 0x1c,
+	                        (byte) 0x13, (byte) 0x92, (byte) 0x4f, (byte) 0xef };
+	    byte[] invTestKey1 = new byte[testKey1.length];
+	    Util.bytesToLittleEndian(invTestKey1);
+	    int[] tv_p1 = { 0x30553228, 0x6d6f295a };
+	    byte[] tv_p1b = convert(tv_p1);
+	    int[] tv_c1 = { 0x55cb3774, 0xd13ef201 };
+	    byte[] tv_c1b = convert(tv_c1);
+	    byte[] tv_t1b = new byte[8];
+
+	    // test vector #2 (offical vector by Bruce Schneier)
+	    String sTestKey2 = "Who is John Galt?";
+	    byte[] testKey2 = sTestKey2.getBytes();
+	    //byte[] invTestKey2 = new byte[testKey2.length];
+	    //Util.bytesToLittleEndian(invTestKey2);
+
+	    int[] tv_p2 = { 0xfedcba98, 0x76543210 };
+	    byte[] tv_p2b = convert(tv_p2);
+	    int[] tv_c2 = { 0xcc91732b, 0x8022f684 };
+	    byte[] tv_c2b = convert(tv_c2);
+	    byte[] tv_t2b = new byte[8];
+
+	    // start the tests, check for a proper decryption, too
+
+	    BlowfishECB testbf1 = new BlowfishECB(testKey1, 0, testKey1.length);
+ 
+	    testbf1.encrypt(tv_p1b, 0, tv_t1b, 0, tv_t1b.length);
+	    assertEquals(Util.bytesToHex(tv_c1b), Util.bytesToHex(tv_t1b));
+
+	    testbf1.decrypt(tv_t1b, 0, tv_t1b, 0, tv_t1b.length);
+	    assertEquals(Util.bytesToHex(tv_p1b), Util.bytesToHex(tv_t1b));
+
+	    BlowfishECB testbf2 = new BlowfishECB(testKey2, 0, testKey2.length);
+	    
+	    testbf2.encrypt(tv_p2b, 0, tv_t2b, 0, tv_t2b.length);
+	    assertEquals(Util.bytesToHex(tv_c2b), Util.bytesToHex(tv_t2b));
+
+	    testbf2.decrypt(tv_t2b, 0, tv_t2b, 0, tv_t2b.length);
+	    assertEquals(Util.bytesToHex(tv_p2b), Util.bytesToHex(tv_t2b));
+	    
+	    BlowfishPwsECB testpws1 = new BlowfishPwsECB(testKey1);
+
+	    tv_t1b = Util.cloneByteArray(tv_p1b);
+	    
+	    testpws1.encrypt(tv_t1b);
+	    assertEquals(Util.bytesToHex(tv_c1b), Util.bytesToHex(tv_t1b));
+
+	    testpws1.decrypt(tv_t1b);
+	    assertEquals(Util.bytesToHex(tv_p1b), Util.bytesToHex(tv_t1b));
+
+	    BlowfishPwsECB testpws2 = new BlowfishPwsECB(testKey2);
+	    
+	    tv_t2b = Util.cloneByteArray(tv_p2b);
+	    testpws2.encrypt(tv_t2b);
+	    assertEquals(Util.bytesToHex(tv_c2b), Util.bytesToHex(tv_t2b));
+
+	    testbf2.decrypt(tv_t2b, 0, tv_t2b, 0, tv_t2b.length);
+	    assertEquals(Util.bytesToHex(tv_p2b), Util.bytesToHex(tv_t2b));
+	}
+	
+	public byte[] convert(int[] v) {
+		byte[] b = new byte[v.length*4];
+
+		for(int j=0;j<v.length;j++) {
+				b[4*j] = (byte)(v[j] >> 24);
+				b[4*j+1] = (byte)(v[j] >> 16);
+				b[4*j+2] = (byte)(v[j] >> 8);
+				b[4*j+3] = (byte)(v[j] >> 0);
+		}
+
+		return b;
 	}
 }

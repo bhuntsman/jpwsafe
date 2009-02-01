@@ -17,8 +17,8 @@ import java.security.NoSuchAlgorithmException;
 import org.pwsafe.lib.I18nHelper;
 import org.pwsafe.lib.Log;
 import org.pwsafe.lib.Util;
-import org.pwsafe.lib.crypto.BCBlowfishPws;
 import org.pwsafe.lib.crypto.BCSHA1;
+import org.pwsafe.lib.crypto.BlowfishPwsECB;
 import org.pwsafe.lib.exception.EndOfFileException;
 import org.pwsafe.lib.exception.InvalidPassphraseException;
 import org.pwsafe.lib.exception.PasswordSafeException;
@@ -147,7 +147,7 @@ public class PwsFileFactory
 		LOG.enterMethod( "PwsFileFactory.genRandHash" );
 
 		BCSHA1			md;
-		BCBlowfishPws	bf;
+		BlowfishPwsECB	bf;
 		//BlowfishECB		bf;
 		byte []			pw;
 		byte []			digest;
@@ -162,10 +162,10 @@ public class PwsFileFactory
 		digest = md.getDigest();
 		
 		try {
-			bf	= new BCBlowfishPws( digest, false );
+			bf	= new BlowfishPwsECB( digest );
 			tmp	= Util.cloneByteArray( stuff, 8 );
 	
-			Util.bytesToLittleEndian( tmp );
+			//Util.bytesToLittleEndian( tmp );
 	
 			for ( int ii = 0; ii < 1000; ++ii )
 			{

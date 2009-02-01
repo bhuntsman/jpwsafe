@@ -3,7 +3,8 @@ package org.pwsafe.lib.file;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.pwsafe.lib.crypto.BCBlowfishPws;
+import org.pwsafe.lib.Log;
+import org.pwsafe.lib.crypto.BlowfishPws;
 import org.pwsafe.lib.crypto.BCSHA1;
 import org.pwsafe.lib.exception.PasswordSafeException;
 
@@ -18,6 +19,8 @@ import org.pwsafe.lib.exception.PasswordSafeException;
  *
  */
 public class CryptoInputStream extends InputStream {
+	private static final Log LOG = Log.getInstance(CryptoInputStream.class.getPackage().getName());
+	
 	private byte [] block = new byte[16];
 	private int index = 0;
 	private int curBlockSize = 0;
@@ -29,7 +32,7 @@ public class CryptoInputStream extends InputStream {
 	
 	private String passphrase;
 	private InputStream rawStream;
-	private BCBlowfishPws engine;
+	private BlowfishPws engine;
 	/**
 	 * Constructor
 	 * @param passphrase The passphrase used to decrypt the stream
@@ -72,7 +75,11 @@ public class CryptoInputStream extends InputStream {
 			/** Read a new block */
 			curBlockSize = rawStream.read(block);
 			if (curBlockSize==-1) { return -1; }
-			engine.decrypt(block);
+			try {
+				engine.decrypt(block);
+			} catch (PasswordSafeException e) {
+				LOG.error(e.getMessage());
+			}
 			index = 1;
 			return (int)block[0] & 0xff;
 		}
@@ -85,7 +92,7 @@ public class CryptoInputStream extends InputStream {
 	 * 
 	 * @return A properly initialised {@link BlowfishPws} object.
 	 */
-	private BCBlowfishPws makeBlowfish( byte [] passphrase )
+	private BlowfishPws makeBlowfish( byte [] passphrase )
 	{
 		BCSHA1	sha1;
 		
@@ -95,7 +102,7 @@ public class CryptoInputStream extends InputStream {
 		sha1.update( salt, 0, salt.length );
 		sha1.finalize();
 
-		return new BCBlowfishPws( sha1.getDigest(), ipThing, true );
+		return new BlowfishPws( sha1.getDigest(), ipThing );
 	}
 	
 	/**

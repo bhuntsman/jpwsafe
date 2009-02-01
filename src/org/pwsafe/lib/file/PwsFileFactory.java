@@ -14,12 +14,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 
-import net.sourceforge.blowfishj.SHA1;
-
 import org.pwsafe.lib.I18nHelper;
 import org.pwsafe.lib.Log;
 import org.pwsafe.lib.Util;
 import org.pwsafe.lib.crypto.BlowfishPwsECB;
+import org.pwsafe.lib.crypto.SHA1;
 import org.pwsafe.lib.exception.EndOfFileException;
 import org.pwsafe.lib.exception.InvalidPassphraseException;
 import org.pwsafe.lib.exception.PasswordSafeException;
@@ -178,6 +177,7 @@ public class PwsFileFactory
 			md.clear(); 
 			md.update( tmp, 0, tmp.length );
 			md.finalize();
+			
 		} catch (PasswordSafeException e) {
 			LOG.error(e.getMessage()); // This should not happen!
 		}

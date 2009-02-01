@@ -1,7 +1,6 @@
 package org.pwsafe.lib.crypto;
 
 import junit.framework.TestCase;
-import net.sourceforge.blowfishj.BlowfishECB;
 
 import org.bouncycastle.crypto.engines.BlowfishEngine;
 import org.bouncycastle.crypto.modes.CBCBlockCipher;
@@ -195,24 +194,6 @@ public class BlowfishPwsTest extends TestCase {
 		assertEquals(Util.bytesToHex(dec), Util.bytesToHex(orig));
 	}
 	
-	public void testCompareECB() throws Exception {
-		byte [] digest = new byte[16];
-		byte [] input = new byte[16];
-		Util.newRandBytes(digest);
-		Util.newRandBytes(input);
-		BlowfishECB    bfecb = new BlowfishECB(digest, 0, digest.length);
-		BlowfishPwsECB bf	= new BlowfishPwsECB( digest );
-		byte [] tmp1 = Util.cloneByteArray( input );
-		byte [] tmp2 = Util.cloneByteArray( input );
-
-		for ( int ii = 0; ii < 1000; ++ii )
-		{
-			bfecb.encrypt(tmp1, 0, tmp1, 0, tmp1.length);
-			bf.encrypt( tmp2 );
-		}
-		assertEquals(Util.bytesToHex(tmp1), Util.bytesToHex(tmp2));
-	}
-	
 	public void testBaselineECB() throws Exception {
 	    // test vector #1 (checking for the "signed bug")
 	    byte[] testKey1 = { (byte) 0x1c, (byte) 0x58, (byte) 0x7f, (byte) 0x1c,
@@ -238,23 +219,6 @@ public class BlowfishPwsTest extends TestCase {
 	    byte[] tv_t2b = new byte[8];
 
 	    // start the tests, check for a proper decryption, too
-
-	    BlowfishECB testbf1 = new BlowfishECB(testKey1, 0, testKey1.length);
- 
-	    testbf1.encrypt(tv_p1b, 0, tv_t1b, 0, tv_t1b.length);
-	    assertEquals(Util.bytesToHex(tv_c1b), Util.bytesToHex(tv_t1b));
-
-	    testbf1.decrypt(tv_t1b, 0, tv_t1b, 0, tv_t1b.length);
-	    assertEquals(Util.bytesToHex(tv_p1b), Util.bytesToHex(tv_t1b));
-
-	    BlowfishECB testbf2 = new BlowfishECB(testKey2, 0, testKey2.length);
-	    
-	    testbf2.encrypt(tv_p2b, 0, tv_t2b, 0, tv_t2b.length);
-	    assertEquals(Util.bytesToHex(tv_c2b), Util.bytesToHex(tv_t2b));
-
-	    testbf2.decrypt(tv_t2b, 0, tv_t2b, 0, tv_t2b.length);
-	    assertEquals(Util.bytesToHex(tv_p2b), Util.bytesToHex(tv_t2b));
-	    
 	    BlowfishPwsECB testpws1 = new BlowfishPwsECB(testKey1);
 
 	    tv_t1b = Util.cloneByteArray(tv_p1b);
@@ -271,7 +235,7 @@ public class BlowfishPwsTest extends TestCase {
 	    testpws2.encrypt(tv_t2b);
 	    assertEquals(Util.bytesToHex(tv_c2b), Util.bytesToHex(tv_t2b));
 
-	    testbf2.decrypt(tv_t2b, 0, tv_t2b, 0, tv_t2b.length);
+	    testpws2.decrypt(tv_t2b);
 	    assertEquals(Util.bytesToHex(tv_p2b), Util.bytesToHex(tv_t2b));
 	}
 	

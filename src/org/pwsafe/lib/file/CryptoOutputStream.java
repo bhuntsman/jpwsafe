@@ -5,8 +5,8 @@ import java.io.OutputStream;
 
 import org.pwsafe.lib.Log;
 import org.pwsafe.lib.Util;
-import org.pwsafe.lib.crypto.BCSHA1;
 import org.pwsafe.lib.crypto.BlowfishPws;
+import org.pwsafe.lib.crypto.SHA1;
 import org.pwsafe.lib.exception.PasswordSafeException;
 
 /**
@@ -58,9 +58,9 @@ public class CryptoOutputStream extends OutputStream {
 	 */
 	private BlowfishPws makeBlowfish( byte [] passphrase )
 	{
-		BCSHA1	sha1;
+		SHA1	sha1;
 		
-		sha1 = new BCSHA1();
+		sha1 = new SHA1();
 
 		sha1.update( passphrase, 0, passphrase.length );
 		sha1.update( salt, 0, salt.length );

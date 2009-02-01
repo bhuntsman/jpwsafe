@@ -14,11 +14,12 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 
+import net.sourceforge.blowfishj.BlowfishECB;
+import net.sourceforge.blowfishj.SHA1;
+
 import org.pwsafe.lib.I18nHelper;
 import org.pwsafe.lib.Log;
 import org.pwsafe.lib.Util;
-import org.pwsafe.lib.crypto.BCSHA1;
-import org.pwsafe.lib.crypto.BlowfishPwsECB;
 import org.pwsafe.lib.exception.EndOfFileException;
 import org.pwsafe.lib.exception.InvalidPassphraseException;
 import org.pwsafe.lib.exception.PasswordSafeException;
@@ -140,40 +141,34 @@ public class PwsFileFactory
 	 * @param  passphrase the passphrase.
 	 * @param  stuff      the random bytes.
 	 * 
-	 * @return the generated checksum. 
+	 * @return the generated checksum.
 	 */
 	static final byte [] genRandHash( String passphrase, byte [] stuff )
 	{
 		LOG.enterMethod( "PwsFileFactory.genRandHash" );
 
-		BCSHA1			md;
-		BlowfishPwsECB	bf;
-		//BlowfishECB		bf;
+		SHA1			md;
+		BlowfishECB		bf;
 		byte []			pw;
 		byte []			digest;
 		byte []			tmp;
 		
 		pw	= passphrase.getBytes();
-		md	= new BCSHA1();
+		md	= new SHA1();
 
 		md.update( stuff, 0, stuff.length );
 		md.update( pw, 0, pw.length );
 		md.finalize();
 		digest = md.getDigest();
 		
-		try {
-			bf	= new BlowfishPwsECB( digest );
-			tmp	= Util.cloneByteArray( stuff, 8 );
-	
-			//Util.bytesToLittleEndian( tmp );
-	
-			for ( int ii = 0; ii < 1000; ++ii )
-			{
-				bf.encrypt( tmp );
-			}
-		} catch (PasswordSafeException e) {
-			LOG.error(e.getMessage());
-			return null;
+		bf	= new BlowfishECB( digest, 0, digest.length );
+		tmp	= Util.cloneByteArray( stuff, 8 );
+
+		Util.bytesToLittleEndian( tmp );
+
+		for ( int ii = 0; ii < 1000; ++ii )
+		{
+			bf.encrypt( tmp, 0, tmp, 0, tmp.length );
 		}
 
 		Util.bytesToLittleEndian( tmp );

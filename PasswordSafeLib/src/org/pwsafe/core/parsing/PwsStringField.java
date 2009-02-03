@@ -7,7 +7,7 @@
  * distributed with this code, or available from
  * http://www.opensource.org/licenses/artistic-license-2.0.php
  */
-package org.pwsafe.lib.file;
+package org.pwsafe.core.parsing;
 
 import java.io.UnsupportedEncodingException;
 
@@ -40,7 +40,7 @@ public class PwsStringField extends PwsField
 		try {
 			bytes = ((String) super.getValue()).getBytes("ISO-8859-1");
 		} catch (UnsupportedEncodingException e) {
-			throw new RuntimeException(e);
+			throw new RuntimeException(e.getMessage());
 		}
 		return bytes;
 	}

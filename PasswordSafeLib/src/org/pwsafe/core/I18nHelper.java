@@ -7,7 +7,7 @@
  * distributed with this code, or available from
  * http://www.opensource.org/licenses/artistic-license-2.0.php
  */
-package org.pwsafe.lib;
+package org.pwsafe.core;
 
 /**
  * A singleton class to help provide messages in the users preferred language.  Messages

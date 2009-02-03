@@ -5,7 +5,7 @@
  * distributed with this code, or available from
  * http://www.opensource.org/licenses/artistic-license-2.0.php
  */
-package org.pwsafe.lib.crypto;
+package org.pwsafe.core.crypto;
 
 import org.bouncycastle.crypto.BufferedBlockCipher;
 import org.bouncycastle.crypto.CryptoException;
@@ -60,7 +60,7 @@ public class TwofishPws {
         }
         catch (CryptoException e)
         {
-            throw new RuntimeException(e);
+            throw new RuntimeException(e.getMessage());
         }
         return out;
     }

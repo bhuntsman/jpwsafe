@@ -7,14 +7,15 @@
  * distributed with this code, or available from
  * http://www.opensource.org/licenses/artistic-license-2.0.php
  */
-package org.pwsafe.lib.file;
+package org.pwsafe.core.parsing;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 
-import org.pwsafe.lib.Log;
-import org.pwsafe.lib.Util;
-import org.pwsafe.lib.exception.EndOfFileException;
+import org.pwsafe.core.Log;
+import org.pwsafe.core.Util;
+import org.pwsafe.core.exception.EndOfFileException;
+import org.pwsafe.fileio.PwsFileFactory;
 
 /**
  * This class encapsulates the header fields of a PasswordSafe database.  The header comprises:
@@ -35,7 +36,7 @@ import org.pwsafe.lib.exception.EndOfFileException;
  */
 public class PwsFileHeader
 {
-	private static final Log LOG = Log.getInstance(PwsFileHeader.class.getPackage().getName());
+	private static final Log LOG = Log.getInstance(PwsFileHeader.class);
 
 	private byte []	RandStuff	= new byte[8];
 	private byte []	RandHash	= new byte[20];

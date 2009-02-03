@@ -7,7 +7,7 @@
  * distributed with this code, or available from
  * http://www.opensource.org/licenses/artistic-license-2.0.php
  */
-package org.pwsafe.lib;
+package org.pwsafe.core;
 
 import org.apache.commons.logging.LogFactory;
 //import org.apache.log4j.Logger;
@@ -45,6 +45,18 @@ public class Log
 	public static Log getInstance( String name )
 	{
 		return new Log( name );
+	}
+
+    	/**
+	 * Returns an instance of <code>Log</code> for the Log4j logger named <code>name</code>.
+	 *
+	 * @param name the Log4j logger name.
+	 *
+	 * @return An <code>Log</code> instance.
+	 */
+	public static Log getInstance( Class c )
+	{
+		return new Log( c.getPackage().getName() );
 	}
 
 	/**

@@ -1,7 +1,7 @@
-package org.pwsafe.lib.crypto;
+package org.pwsafe.core.crypto;
 
-import org.pwsafe.lib.Util;
-import org.pwsafe.lib.exception.PasswordSafeException;
+import org.pwsafe.core.Util;
+import org.pwsafe.core.exception.PasswordSafeException;
 
 public class BlowfishPwsECB extends BlowfishPws {
 	/**

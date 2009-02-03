@@ -7,7 +7,7 @@
  * distributed with this code, or available from
  * http://www.opensource.org/licenses/artistic-license-2.0.php
  */
-package org.pwsafe.lib.crypto;
+package org.pwsafe.core.crypto;
 
 import java.nio.ByteBuffer;
 
@@ -16,8 +16,8 @@ import org.bouncycastle.crypto.engines.BlowfishEngine;
 import org.bouncycastle.crypto.modes.CBCBlockCipher;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
-import org.pwsafe.lib.Util;
-import org.pwsafe.lib.exception.PasswordSafeException;
+import org.pwsafe.core.Util;
+import org.pwsafe.core.exception.PasswordSafeException;
 
 /**
  * A reimplementation of the BlowfishPws class to use the Bouncy Castle
@@ -177,8 +177,10 @@ public class BlowfishPws
 	
 	public static byte[] makeByteKey(long key) {
 		byte ivBytes[] = new byte[8];
-		ByteBuffer buf = ByteBuffer.wrap(ivBytes);  
-		buf.putLong(key);
-		return ivBytes;
+		ByteBuffer buf = ByteBuffer.wrap(ivBytes);
+        // TODO: I need to implement this for J2ME
+        throw new RuntimeException("Unimplemented");
+		//buf.putLong(key);
+		//return ivBytes;
 	}
 }

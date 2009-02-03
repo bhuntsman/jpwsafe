@@ -29,21 +29,21 @@ public class InvalidPassphrasePolicy extends Exception
 	{
 		super( arg0 );
 	}
-
-	/**
-	 * @param arg0
-	 */
-	public InvalidPassphrasePolicy( Throwable arg0 )
-	{
-		super( arg0 );
-	}
-
-	/**
-	 * @param arg0
-	 * @param arg1
-	 */
-	public InvalidPassphrasePolicy( String arg0, Throwable arg1 )
-	{
-		super( arg0, arg1 );
-	}
+//
+//	/**
+//	 * @param arg0
+//	 */
+//	public InvalidPassphrasePolicy( Throwable arg0 )
+//	{
+//		super( arg0 );
+//	}
+//
+//	/**
+//	 * @param arg0
+//	 * @param arg1
+//	 */
+//	public InvalidPassphrasePolicy( String arg0, Throwable arg1 )
+//	{
+//		super( arg0, arg1 );
+//	}
 }

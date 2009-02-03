@@ -1,4 +1,4 @@
-package org.pwsafe.lib.file;
+package org.pwsafe.fileio;
 
 import java.io.IOException;
 import java.io.OutputStream;

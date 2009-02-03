@@ -1,4 +1,4 @@
-package org.pwsafe.lib.file;
+package org.pwsafe.core.parsing;
 
 import java.io.BufferedReader;
 import java.io.File;

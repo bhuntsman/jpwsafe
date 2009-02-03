@@ -7,7 +7,7 @@
  * distributed with this code, or available from
  * http://www.opensource.org/licenses/artistic-license-2.0.php
  */
-package org.pwsafe.lib.exception;
+package org.pwsafe.core.exception;
 
 /**
  * An exception to indicate that the passphrase given for a file is incorrect.
@@ -32,20 +32,20 @@ public class InvalidPassphraseException extends Exception
 		super(message);
 	}
 
-	/**
-	 * @param message
-	 * @param cause
-	 */
-	public InvalidPassphraseException(String message, Throwable cause)
-	{
-		super(message, cause);
-	}
-
-	/**
-	 * @param cause
-	 */
-	public InvalidPassphraseException(Throwable cause)
-	{
-		super(cause);
-	}
+//	/**
+//	 * @param message
+//	 * @param cause
+//	 */
+//	public InvalidPassphraseException(String message, Throwable cause)
+//	{
+//		super(message, cause);
+//	}
+//
+//	/**
+//	 * @param cause
+//	 */
+//	public InvalidPassphraseException(Throwable cause)
+//	{
+//		super(cause);
+//	}
 }

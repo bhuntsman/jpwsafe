@@ -7,7 +7,7 @@
  * distributed with this code, or available from
  * http://www.opensource.org/licenses/artistic-license-2.0.php
  */
-package org.pwsafe.lib.file;
+package org.pwsafe.fileio;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;

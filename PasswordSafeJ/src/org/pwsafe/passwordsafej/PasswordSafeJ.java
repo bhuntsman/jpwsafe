@@ -26,6 +26,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 
 import org.pwsafe.lib.Log;
 import org.pwsafe.lib.exception.EndOfFileException;
@@ -33,6 +34,7 @@ import org.pwsafe.lib.exception.InvalidPassphraseException;
 import org.pwsafe.lib.exception.UnsupportedFileVersionException;
 import org.pwsafe.lib.file.PwsFile;
 import org.pwsafe.lib.file.PwsFileFactory;
+
 
 /**
  * 
@@ -45,10 +47,10 @@ public class PasswordSafeJ extends JFrame
 	 */
 	private static final Log	LOG	= Log.getInstance( PasswordSafeJ.class.getPackage().getName() );
 
-	private MenuHandler		menuHandler;
+	private final MenuHandler		menuHandler;
 	private TreeHandler		treeHandler;
-	private ToolbarHandler	toolbarHandler;
-	private JTextField		statusBar;
+	private final ToolbarHandler	toolbarHandler;
+	private final JTextField		statusBar;
 	private PwsFile			theFile;
 
 	/**
@@ -61,8 +63,11 @@ public class PasswordSafeJ extends JFrame
 
 		JFrame.setDefaultLookAndFeelDecorated( true );
 		JDialog.setDefaultLookAndFeelDecorated( true );
-
-		new PasswordSafeJ();
+        SwingUtilities.invokeLater(new Runnable() {
+        	                  public void run() {
+        	                               new PasswordSafeJ();
+        	                   }
+        	               });
 
 		LOG.leaveMethod( "main" );
 	}

@@ -31,14 +31,17 @@ public class PwsFileV3Test extends TestCase {
 
 	private static final Log log = Log.getInstance(PwsFileV3Test.class.getName());
 
+	private File testFile;
 	private String filename;
 	private String passphrase;
 
 	private PwsFileV3 pwsFile;
 
 	@Override
-	public void setUp() {
-		filename = System.getProperty("user.dir") + File.separator + "sample3.psafe3";
+	public void setUp() throws IOException {
+		
+		testFile = File.createTempFile("sample3", "psafe3");
+		filename = testFile.getPath();
 		passphrase = "Pa$$word";
 
 		try {
